@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2048 Navigator (1-12)</title>
+  <style>
+    :root {
+      --bg-base: #0b1120;
+      --bg-card: rgba(30, 41, 59, 0.72);
+      --bg-card-solid: #162033;
+      --bg-board: #0f172a;
+      --border-subtle: rgba(148, 163, 184, 0.16);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --best: #10b981;
+      --best-glow: rgba(16, 185, 129, 0.45);
+      --warn: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+      background-color: var(--bg-base);
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.12), transparent 35%),
+        radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.1), transparent 35%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 40px;
+      line-height: 1.5;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: #0b1120;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .brand p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 14px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      display: block;
+    }
+
+    .stat-val {
+      font-size: 1rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: #fff;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border-subtle);
+      background: rgba(51, 65, 85, 0.5);
+      color: var(--text-main);
+      padding: 9px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: rgba(71, 85, 105, 0.7);
+      border-color: rgba(148, 163, 184, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-danger {
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    /* Main Grid Layout */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 820px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    }
+
+    /* Status Banner */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 14px;
+      font-size: 0.85rem;
+    }
+
+    .status-banner.awaiting-spawn {
+      border-color: rgba(56, 189, 248, 0.5);
+      background: rgba(56, 189, 248, 0.1);
+      color: #bae6fd;
+    }
+
+    .status-banner.goal-reached {
+      border-color: rgba(250, 204, 21, 0.6);
+      background: rgba(250, 204, 21, 0.14);
+      color: #fef08a;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .awaiting-spawn .status-dot {
+      animation: pulseDot 1.2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+
+    /* 4x4 Board */
+    .board-wrapper {
+      position: relative;
+      background: var(--bg-board);
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.45);
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      aspect-ratio: 1 / 1;
+    }
+
+    .cell {
+      position: relative;
+      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.5rem, 4.5vw, 2.2rem);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+    }
+
+    .cell.empty:hover {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.45);
+      transform: scale(1.02);
+    }
+
+    .board.awaiting .cell.empty {
+      border-style: dashed;
+      border-color: rgba(56, 189, 248, 0.4);
+      animation: emptyHint 1.8s infinite ease-in-out;
+    }
+
+    @keyframes emptyHint {
+      0%, 100% { background: rgba(30, 41, 59, 0.55); }
+      50% { background: rgba(56, 189, 248, 0.11); }
+    }
+
+    .cell.empty::after {
+      content: '+';
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: rgba(148, 163, 184, 0.2);
+      transition: color 0.15s;
+    }
+
+    .cell.empty:hover::after {
+      color: rgba(56, 189, 248, 0.8);
+    }
+
+    .cell.filled:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .cell.anim-spawn {
+      animation: popIn 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    .cell.anim-merge {
+      animation: mergePop 0.24s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0.3; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes mergePop {
+      0% { transform: scale(0.85); }
+      50% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    /* Tile Colors 1 - 12+ */
+    .tile-1  { background: linear-gradient(135deg, #334155, #1e293b); color: #e2e8f0; border-color: rgba(148,163,184,0.28); }
+    .tile-2  { background: linear-gradient(135deg, #1e40af, #1e3a8a); color: #dbeafe; border-color: rgba(96,165,250,0.35); }
+    .tile-3  { background: linear-gradient(135deg, #0284c7, #0369a1); color: #e0f2fe; border-color: rgba(56,189,248,0.45); }
+    .tile-4  { background: linear-gradient(135deg, #0d9488, #0f766e); color: #ccfbf1; border-color: rgba(45,212,191,0.45); }
+    .tile-5  { background: linear-gradient(135deg, #059669, #047857); color: #d1fae5; border-color: rgba(52,211,153,0.45); }
+    .tile-6  { background: linear-gradient(135deg, #65a30d, #4d7c0f); color: #ecfccb; border-color: rgba(163,230,53,0.45); }
+    .tile-7  { background: linear-gradient(135deg, #d97706, #b45309); color: #fef3c7; border-color: rgba(251,191,36,0.5); box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25); }
+    .tile-8  { background: linear-gradient(135deg, #ea580c, #c2410c); color: #ffedd5; border-color: rgba(251,146,60,0.55); box-shadow: 0 4px 16px rgba(234, 88, 12, 0.3); }
+    .tile-9  { background: linear-gradient(135deg, #e11d48, #be123c); color: #ffe4e6; border-color: rgba(251,113,133,0.55); box-shadow: 0 4px 18px rgba(225, 29, 72, 0.35); }
+    .tile-10 { background: linear-gradient(135deg, #9333ea, #7e22ce); color: #f3e8ff; border-color: rgba(192,132,252,0.6); box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4); }
+    .tile-11 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #1e1b4b; border-color: rgba(253,224,71,0.85); box-shadow: 0 0 24px rgba(245, 158, 11, 0.55); }
+    .tile-12 {
+      background: linear-gradient(135deg, #fde047, #38bdf8, #f472b6);
+      color: #090d16;
+      border-color: #fff;
+      box-shadow: 0 0 28px rgba(253, 224, 71, 0.65), 0 0 12px rgba(56, 189, 248, 0.5);
+    }
+    .tile-high {
+      background: linear-gradient(135deg, #ffffff, #cbd5e1);
+      color: #0f172a;
+      box-shadow: 0 0 28px rgba(255, 255, 255, 0.6);
+    }
+
+    /* Palette */
+    .palette-section {
+      margin-top: 16px;
+      max-width: 440px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .palette-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .pal-btn {
+      appearance: none;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.75);
+      color: var(--text-main);
+      height: 36px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .pal-btn:hover {
+      background: rgba(51, 65, 85, 0.7);
+    }
+
+    .pal-btn.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.2);
+      color: #fff;
+      box-shadow: 0 0 12px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .pal-btn.pal-erase {
+      grid-column: span 2;
+      font-size: 0.75rem;
+      color: #fca5a5;
+    }
+
+    .pal-btn.pal-erase.active {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, 0.22);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+    }
+
+    /* Right Column: Navigator & D-Pad */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Best Move Card */
+    .best-move-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 14px;
+    }
+
+    .best-move-box.has-best {
+      border-color: rgba(16, 185, 129, 0.45);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(15, 23, 42, 0.85));
+    }
+
+    .best-arrow-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      color: #34d399;
+      display: grid;
+      place-items: center;
+      font-size: 1.7rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .best-move-box:not(.has-best) .best-arrow-icon {
+      background: rgba(148, 163, 184, 0.1);
+      border-color: var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    .best-text-main {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .best-text-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Direction Scores */
+    .dir-evals {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .dir-row {
+      display: grid;
+      grid-template-columns: 54px 1fr 56px;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+    }
+
+    .dir-name {
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dir-row.is-best .dir-name {
+      color: #34d399;
+    }
+
+    .bar-track {
+      height: 8px;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 99px;
+      background: #475569;
+      transition: width 0.22s ease, background 0.22s ease;
+    }
+
+    .dir-row.is-best .bar-fill {
+      background: linear-gradient(90deg, #10b981, #34d399);
+    }
+
+    .dir-row.is-good .bar-fill {
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+    }
+
+    .dir-pct {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+      font-size: 0.74rem;
+    }
+
+    /* Corner Strategy Selector */
+    .corner-selector {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+      align-items: center;
+    }
+
+    .corner-label {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+
+    .corner-btn {
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.65);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .corner-btn.active {
+      color: #e0f2fe;
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.18);
+    }
+
+    /* D-Pad Controls */
+    .dpad-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 68px);
+      grid-template-rows: repeat(3, 68px);
+      gap: 8px;
+    }
+
+    .dpad-btn {
+      position: relative;
+      appearance: none;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      color: var(--text-main);
+      border-radius: 16px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: all 0.14s ease;
+    }
+
+    .dpad-btn:hover:not(:disabled) {
+      border-color: rgba(148, 163, 184, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .dpad-btn:active:not(:disabled) {
+      transform: translateY(1px) scale(0.96);
+    }
+
+    .dpad-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .dpad-btn.recommended {
+      border-color: var(--best);
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.32), rgba(6, 78, 59, 0.6));
+      color: #ecfdf5;
+      box-shadow: 0 0 22px var(--best-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      animation: bestPulse 1.8s infinite ease-in-out;
+    }
+
+    @keyframes bestPulse {
+      0%, 100% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.35); }
+      50% { box-shadow: 0 0 26px rgba(16, 185, 129, 0.7); }
+    }
+
+    .best-tag {
+      position: absolute;
+      top: -8px;
+      font-size: 0.58rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      background: var(--best);
+      color: #022c22;
+      padding: 1px 6px;
+      border-radius: 99px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .dpad-center {
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      display: grid;
+      place-items: center;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .dpad-up    { grid-column: 2; grid-row: 1; }
+    .dpad-left  { grid-column: 1; grid-row: 2; }
+    .dpad-center{ grid-column: 2; grid-row: 2; }
+    .dpad-right { grid-column: 3; grid-row: 2; }
+    .dpad-down  { grid-column: 2; grid-row: 3; }
+
+    .kbd-hint {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Cell Quick Edit Popover */
+    .popover-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none;
+    }
+
+    .popover-backdrop.open {
+      display: block;
+    }
+
+    .cell-popover {
+      position: fixed;
+      z-index: 100;
+      background: #1e293b;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      width: 224px;
+      display: none;
+    }
+
+    .cell-popover.open {
+      display: block;
+      animation: popIn 0.12s ease-out;
+    }
+
+    .popover-title {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .popover-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .pop-btn {
+      border: 1px solid var(--border-subtle);
+      background: #0f172a;
+      color: var(--text-main);
+      height: 34px;
+      border-radius: 7px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .pop-btn:hover {
+      background: #334155;
+    }
+
+    .pop-btn.pop-del {
+      grid-column: span 4;
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      margin-top: 2px;
+      font-size: 0.78rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-badge">12</div>
+        <div>
+          <h1>2048 Navigator <span style="font-weight:400; color:var(--text-muted); font-size:0.85rem;">(1–12)</span></h1>
+          <p>同じ数字を合体させて +1（1 → 2 → … → 12）｜AIが最適手をナビゲート</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="stat-pill">
+          <span class="stat-label">最大タイル</span>
+          <span class="stat-val" id="stat-max">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">手数</span>
+          <span class="stat-val" id="stat-moves">0</span>
+        </div>
+        <button class="btn" id="btn-undo" disabled>↩ 1手戻す</button>
+        <button class="btn btn-danger" id="btn-reset">↻ リセット</button>
+      </div>
+    </header>
+
+    <div class="main-layout">
+      <!-- Left Column: Board & Tile Input -->
+      <div class="panel">
+        <div class="status-banner" id="status-banner">
+          <div style="display:flex; align-items:center; gap:9px;">
+            <span class="status-dot"></span>
+            <span id="status-text">盤面の空きマスをクリックして、現在の数字（通常は1が2つ）を入力してください</span>
+          </div>
+        </div>
+
+        <div class="board-wrapper">
+          <div class="board" id="board"></div>
+        </div>
+
+        <div class="palette-section">
+          <div class="palette-header">
+            <span>空きマスのクリックで配置する数字：</span>
+            <span id="palette-current" style="color: var(--accent); font-weight: 700;">選択中: 1</span>
+          </div>
+          <div class="palette-grid" id="palette-grid"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: AI Navigation & D-Pad -->
+      <div class="right-col">
+        <div class="panel">
+          <div class="section-title">
+            <span>AI 最適操作ナビゲーション</span>
+            <span id="calc-badge" style="font-size:0.7rem; color:var(--accent);">Ready</span>
+          </div>
+
+          <div class="best-move-box" id="best-move-box">
+            <div class="best-arrow-icon" id="best-arrow-icon">−</div>
+            <div>
+              <div class="best-text-main" id="best-text-main">盤面を入力してください</div>
+              <div class="best-text-sub" id="best-text-sub">タイルを配置すると最適手を計算します</div>
+            </div>
+          </div>
+
+          <div class="dir-evals" id="dir-evals">
+            <div class="dir-row" data-dir="up">
+              <span class="dir-name">↑ 上</span>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+              <span class="dir-pct">-</span>
+            </div>
+            <div class="dir-row" data-dir="left">
+              <span class="dir-name">← 左</span>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+              <span class="dir-pct">-</span>
+            </div>
+            <div class="dir-row" data-dir="down">
+              <span class="dir-name">↓ 下</span>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+              <span class="dir-pct">-</span>
+            </div>
+            <div class="dir-row" data-dir="right">
+              <span class="dir-name">→ 右</span>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+              <span class="dir-pct">-</span>
+            </div>
+          </div>
+
+          <div class="corner-selector">
+            <span class="corner-label">固定角:</span>
+            <button class="corner-btn active" data-corner="auto">自動</button>
+            <button class="corner-btn" data-corner="bl">左下</button>
+            <button class="corner-btn" data-corner="tl">左上</button>
+            <button class="corner-btn" data-corner="br">右下</button>
+            <button class="corner-btn" data-corner="tr">右上</button>
+          </div>
+        </div>
+
+        <div class="panel dpad-container">
+          <div class="section-title" style="width:100%; margin-bottom:2px;">
+            <span>十字キー操作</span>
+            <span style="font-size:0.7rem; font-weight:400;">自動でスライド＆合体</span>
+          </div>
+
+          <div class="dpad">
+            <button class="dpad-btn dpad-up" id="dpad-up" data-dir="up" aria-label="上">↑</button>
+            <button class="dpad-btn dpad-left" id="dpad-left" data-dir="left" aria-label="左">←</button>
+            <div class="dpad-center">MOVE</div>
+            <button class="dpad-btn dpad-right" id="dpad-right" data-dir="right" aria-label="右">→</button>
+            <button class="dpad-btn dpad-down" id="dpad-down" data-dir="down" aria-label="下">↓</button>
+          </div>
+
+          <div class="kbd-hint">キーボードの <strong>↑ ↓ ← →</strong> または <strong>W A S D</strong> でも操作可能</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Edit Popover for filled cells -->
+  <div class="popover-backdrop" id="popover-backdrop"></div>
+  <div class="cell-popover" id="cell-popover">
+    <div class="popover-title">
+      <span>マスの値を編集</span>
+      <span id="popover-pos" style="color:var(--accent);"></span>
+    </div>
+    <div class="popover-grid" id="popover-grid"></div>
+  </div>
+
+  <script>
+    (() => {
+      // =========================================================
+      // 1. 高速ビットボード & ルックアップテーブル (Expectimax用)
+      // =========================================================
+      // 各行は16bit整数 (4bit × 4マス: c0はbit0-3, c1はbit4-7, c2はbit8-11, c3はbit12-15)
+      const moveLeftTable = new Uint16Array(65536);
+      const moveRightTable = new Uint16Array(65536);
+      const rowHeurTable = new Float64Array(65536);
+
+      // タイル価値 (1..15)
+      const TILE_VAL = new Float64Array(16);
+      const TILE_SUM_VAL = new Float64Array(16);
+      for (let t = 1; t < 16; t++) {
+        TILE_VAL[t] = Math.pow(2, t);
+        TILE_SUM_VAL[t] = Math.pow(2.5, t);
+      }
+
+      function reverseRow(row) {
+        return ((row & 0x000F) << 12) |
+               ((row & 0x00F0) << 4)  |
+               ((row & 0x0F00) >> 4)  |
+               ((row & 0xF000) >> 12);
+      }
+
+      function slideRowLeftRaw(row) {
+        const c = [
+          row & 0xF,
+          (row >> 4) & 0xF,
+          (row >> 8) & 0xF,
+          (row >> 12) & 0xF
+        ];
+        const nz = [];
+        for (let i = 0; i < 4; i++) {
+          if (c[i] !== 0) nz.push(c[i]);
+        }
+        const out = [0, 0, 0, 0];
+        let idx = 0;
+        for (let i = 0; i < nz.length; i++) {
+          if (i + 1 < nz.length && nz[i] === nz[i + 1] && nz[i] < 15) {
+            out[idx++] = nz[i] + 1;
+            i++;
+          } else {
+            out[idx++] = nz[i];
+          }
+        }
+        return out[0] | (out[1] << 4) | (out[2] << 8) | (out[3] << 12);
+      }
+
+      function initTables() {
+        for (let row = 0; row < 65536; row++) {
+          const left = slideRowLeftRaw(row);
+          moveLeftTable[row] = left;
+          moveRightTable[reverseRow(row)] = reverseRow(left);
+
+          // 行単位の基本ヒューリスティック評価
+          const a = [
+            row & 0xF,
+            (row >> 4) & 0xF,
+            (row >> 8) & 0xF,
+            (row >> 12) & 0xF
+          ];
+
+          let empty = 0;
+          let sum = 0;
+          let merges = 0;
+          let prev = 0;
+          let counter = 0;
+
+          for (let i = 0; i < 4; i++) {
+            const v = a[i];
+            if (v === 0) {
+              empty++;
+            } else {
+              sum += TILE_SUM_VAL[v];
+              if (prev === v) {
+                counter++;
+              } else if (counter > 0) {
+                merges += (1 + counter) * TILE_VAL[prev];
+                counter = 0;
+              }
+              prev = v;
+            }
+          }
+          if (counter > 0) {
+            merges += (1 + counter) * TILE_VAL[prev];
+          }
+
+          let monoLeft = 0;
+          let monoRight = 0;
+          for (let i = 0; i < 3; i++) {
+            const v1 = TILE_VAL[a[i]];
+            const v2 = TILE_VAL[a[i + 1]];
+            if (v1 > v2) monoLeft += v1 - v2;
+            else monoRight += v2 - v1;
+          }
+          const monoPenalty = Math.min(monoLeft, monoRight);
+
+          rowHeurTable[row] =
+            empty * 60 +
+            merges * 1.6 +
+            sum * 0.65 -
+            monoPenalty * 0.9;
+        }
+      }
+
+      initTables();
+
+      // 8通りのスネーク重みマップ (各16要素、インデックス r*4 + c)
+      // 角の配置: 0=左上(tl), 3=右上(tr), 12=左下(bl), 15=右下(br)
+      const BASE_SNAKE_WEIGHTS = [
+        15.0, 11.5, 8.8, 6.8,
+        5.2,  4.0,  3.1, 2.4,
+        1.8,  1.4,  1.1, 0.85,
+        0.65, 0.5,  0.35, 0.2
+      ];
+
+      function buildSnakeOrders() {
+        const patterns = {
+          tl: [
+            [0,1,2,3, 7,6,5,4, 8,9,10,11, 15,14,13,12], // 横スネーク
+            [0,4,8,12, 13,9,5,1, 2,6,10,14, 15,11,7,3]  // 縦スネーク
+          ],
+          tr: [
+            [3,2,1,0, 4,5,6,7, 11,10,9,8, 12,13,14,15],
+            [3,7,11,15, 14,10,6,2, 1,5,9,13, 12,8,4,0]
+          ],
+          bl: [
+            [12,13,14,15, 11,10,9,8, 4,5,6,7, 3,2,1,0],
+            [12,8,4,0, 1,5,9,13, 14,10,6,2, 3,7,11,15]
+          ],
+          br: [
+            [15,14,13,12, 8,9,10,11, 7,6,5,4, 0,1,2,3],
+            [15,11,7,3, 2,6,10,14, 13,9,5,1, 0,4,8,12]
+          ]
+        };
+
+        const maps = {};
+        for (const key of Object.keys(patterns)) {
+          maps[key] = patterns[key].map(order => {
+            const w = new Float64Array(16);
+            for (let rank = 0; rank < 16; rank++) {
+              w[order[rank]] = BASE_SNAKE_WEIGHTS[rank];
+            }
+            return w;
+          });
+        }
+        maps.auto = [...maps.tl, ...maps.tr, ...maps.bl, ...maps.br];
+        return maps;
+      }
+
+      const SNAKE_MAPS = buildSnakeOrders();
+
+      function transpose(b) {
+        const r0 = b[0], r1 = b[1], r2 = b[2], r3 = b[3];
+        return [
+          (r0 & 0x000F) | ((r1 & 0x000F) << 4) | ((r2 & 0x000F) << 8) | ((r3 & 0x000F) << 12),
+          ((r0 >> 4) & 0xF) | (((r1 >> 4) & 0xF) << 4) | (((r2 >> 4) & 0xF) << 8) | (((r3 >> 4) & 0xF) << 12),
+          ((r0 >> 8) & 0xF) | (((r1 >> 8) & 0xF) << 4) | (((r2 >> 8) & 0xF) << 8) | (((r3 >> 8) & 0xF) << 12),
+          ((r0 >> 12) & 0xF) | (((r1 >> 12) & 0xF) << 4) | (((r2 >> 12) & 0xF) << 8) | (((r3 >> 12) & 0xF) << 12)
+        ];
+      }
+
+      function moveBoard(b, dir) {
+        if (dir === 'left') {
+          const n0 = moveLeftTable[b[0]];
+          const n1 = moveLeftTable[b[1]];
+          const n2 = moveLeftTable[b[2]];
+          const n3 = moveLeftTable[b[3]];
+          if (n0 === b[0] && n1 === b[1] && n2 === b[2] && n3 === b[3]) return null;
+          return [n0, n1, n2, n3];
+        }
+        if (dir === 'right') {
+          const n0 = moveRightTable[b[0]];
+          const n1 = moveRightTable[b[1]];
+          const n2 = moveRightTable[b[2]];
+          const n3 = moveRightTable[b[3]];
+          if (n0 === b[0] && n1 === b[1] && n2 === b[2] && n3 === b[3]) return null;
+          return [n0, n1, n2, n3];
+        }
+        if (dir === 'up') {
+          const t = transpose(b);
+          const n0 = moveLeftTable[t[0]];
+          const n1 = moveLeftTable[t[1]];
+          const n2 = moveLeftTable[t[2]];
+          const n3 = moveLeftTable[t[3]];
+          if (n0 === t[0] && n1 === t[1] && n2 === t[2] && n3 === t[3]) return null;
+          return transpose([n0, n1, n2, n3]);
+        }
+        if (dir === 'down') {
+          const t = transpose(b);
+          const n0 = moveRightTable[t[0]];
+          const n1 = moveRightTable[t[1]];
+          const n2 = moveRightTable[t[2]];
+          const n3 = moveRightTable[t[3]];
+          if (n0 === t[0] && n1 === t[1] && n2 === t[2] && n3 === t[3]) return null;
+          return transpose([n0, n1, n2, n3]);
+        }
+        return null;
+      }
+
+      function countEmpty(b) {
+        let empty = 0;
+        for (let r = 0; r < 4; r++) {
+          const row = b[r];
+          if ((row & 0x000F) === 0) empty++;
+          if ((row & 0x00F0) === 0) empty++;
+          if ((row & 0x0F00) === 0) empty++;
+          if ((row & 0xF000) === 0) empty++;
+        }
+        return empty;
+      }
+
+      function evaluateBoard(b, cornerMode) {
+        const tb = transpose(b);
+        let baseScore =
+          rowHeurTable[b[0]] + rowHeurTable[b[1]] + rowHeurTable[b[2]] + rowHeurTable[b[3]] +
+          rowHeurTable[tb[0]] + rowHeurTable[tb[1]] + rowHeurTable[tb[2]] + rowHeurTable[tb[3]];
+
+        // 盤面を展開してスネーク重み＆空きマススケール補正
+        const vals = new Float64Array(16);
+        let maxTile = 0;
+        let emptyCount = 0;
+        let goalBonus = 0;
+
+        for (let r = 0; r < 4; r++) {
+          const row = b[r];
+          for (let c = 0; c < 4; c++) {
+            const t = (row >> (c * 4)) & 0xF;
+            if (t === 0) {
+              emptyCount++;
+            } else {
+              vals[r * 4 + c] = TILE_VAL[t];
+              if (t > maxTile) maxTile = t;
+              if (t >= 12) goalBonus += 50000;
+            }
+          }
+        }
+
+        const weightsList = SNAKE_MAPS[cornerMode] || SNAKE_MAPS.auto;
+        let bestSnake = -Infinity;
+        for (let p = 0; p < weightsList.length; p++) {
+          const w = weightsList[p];
+          let s = 0;
+          for (let i = 0; i < 16; i++) {
+            s += vals[i] * w[i];
+          }
+          if (s > bestSnake) bestSnake = s;
+        }
+
+        // 空きマスの価値を盤面規模に応じて微調整
+        const emptyBonus = emptyCount * (120 + TILE_VAL[maxTile] * 0.25);
+
+        return baseScore + bestSnake * 1.45 + emptyBonus + goalBonus;
+      }
+
+      // Expectimax 探索 (キャッシュ付き)
+      const DIRS = ['up', 'left', 'down', 'right'];
+
+      function searchBestMoves(b, cornerMode) {
+        const empty = countEmpty(b);
+        // 空きマス数に応じて深さを自動調整 (ブラウザが重くならないバランス)
+        let maxDepth = 2;
+        if (empty <= 4) maxDepth = 4;
+        else if (empty <= 8) maxDepth = 3;
+
+        const cache = new Map();
+        const startTime = performance.now();
+        let aborted = false;
+
+        function boardKey(brd, depth, isPlayer) {
+          return `${brd[0]},${brd[1]},${brd[2]},${brd[3]}|${depth}|${isPlayer ? 1 : 0}`;
+        }
+
+        function expectimax(brd, depth, isPlayer, probAccum) {
+          if (performance.now() - startTime > 110) {
+            aborted = true;
+            return evaluateBoard(brd, cornerMode);
+          }
+
+          if (depth === 0 || probAccum < 0.004) {
+            return evaluateBoard(brd, cornerMode);
+          }
+
+          const key = boardKey(brd, depth, isPlayer);
+          if (cache.has(key)) return cache.get(key);
+
+          let result;
+          if (isPlayer) {
+            let best = -Infinity;
+            let movedAny = false;
+            for (let i = 0; i < 4; i++) {
+              const nb = moveBoard(brd, DIRS[i]);
+              if (nb !== null) {
+                movedAny = true;
+                const val = expectimax(nb, depth, false, probAccum);
+                if (val > best) best = val;
+              }
+            }
+            result = movedAny ? best : -1e9;
+          } else {
+            // CHANCE ノード (空きマスに 1 が 90%, 2 が 10% で出現)
+            const emptyCells = [];
+            for (let r = 0; r < 4; r++) {
+              const row = brd[r];
+              for (let c = 0; c < 4; c++) {
+                if (((row >> (c * 4)) & 0xF) === 0) {
+                  emptyCells.push([r, c]);
+                }
+              }
+            }
+            if (emptyCells.length === 0) {
+              result = expectimax(brd, depth - 1, true, probAccum);
+            } else {
+              let sum = 0;
+              const n = emptyCells.length;
+              // 深い層では最も確率の高い '1' のみ評価して枝刈り高速化
+              const includeTwo = depth >= maxDepth - 1 || n <= 5;
+              const p1 = (includeTwo ? 0.9 : 1.0) / n;
+              const p2 = 0.1 / n;
+
+              for (let i = 0; i < n; i++) {
+                const [r, c] = emptyCells[i];
+                const shift = c * 4;
+
+                const b1 = [brd[0], brd[1], brd[2], brd[3]];
+                b1[r] |= (1 << shift);
+                sum += p1 * expectimax(b1, depth - 1, true, probAccum * p1);
+
+                if (includeTwo) {
+                  const b2 = [brd[0], brd[1], brd[2], brd[3]];
+                  b2[r] |= (2 << shift);
+                  sum += p2 * expectimax(b2, depth - 1, true, probAccum * p2);
+                }
+              }
+              result = sum;
+            }
+          }
+
+          if (!aborted) cache.set(key, result);
+          return result;
+        }
+
+        const results = {};
+        for (const dir of DIRS) {
+          const nb = moveBoard(b, dir);
+          if (nb === null) {
+            results[dir] = null;
+          } else {
+            results[dir] = expectimax(nb, maxDepth, false, 1.0);
+          }
+        }
+        return { results, depth: maxDepth };
+      }
+
+      // =========================================================
+      // 2. アプリ状態管理 & UI 操作
+      // =========================================================
+      let board = [0, 0, 0, 0]; // 4x4 bitboard
+      let selectedTileValue = 1; // 1..12 or 0 (erase)
+      let cornerMode = 'auto';
+      let movesCount = 0;
+      let awaitingSpawn = false;
+      let history = [];
+      let animMap = new Map(); // "r,c" -> 'spawn' | 'merge'
+      let editingCell = null;
+
+      const boardEl = document.getElementById('board');
+      const paletteGridEl = document.getElementById('palette-grid');
+      const paletteCurrentEl = document.getElementById('palette-current');
+      const statusBannerEl = document.getElementById('status-banner');
+      const statusTextEl = document.getElementById('status-text');
+      const statMaxEl = document.getElementById('stat-max');
+      const statMovesEl = document.getElementById('stat-moves');
+      const btnUndo = document.getElementById('btn-undo');
+      const btnReset = document.getElementById('btn-reset');
+      const bestMoveBox = document.getElementById('best-move-box');
+      const bestArrowIcon = document.getElementById('best-arrow-icon');
+      const bestTextMain = document.getElementById('best-text-main');
+      const bestTextSub = document.getElementById('best-text-sub');
+      const calcBadge = document.getElementById('calc-badge');
+
+      const popover = document.getElementById('cell-popover');
+      const popoverBackdrop = document.getElementById('popover-backdrop');
+      const popoverGrid = document.getElementById('popover-grid');
+      const popoverPos = document.getElementById('popover-pos');
+
+      const DIR_META = {
+        up:    { arrow: '↑', label: '上 (UP)' },
+        left:  { arrow: '←', label: '左 (LEFT)' },
+        down:  { arrow: '↓', label: '下 (DOWN)' },
+        right: { arrow: '→', label: '右 (RIGHT)' }
+      };
+
+      function getCell(r, c) {
+        return (board[r] >> (c * 4)) & 0xF;
+      }
+
+      function setCell(r, c, val) {
+        const mask = ~(0xF << (c * 4));
+        board[r] = (board[r] & mask) | ((val & 0xF) << (c * 4));
+      }
+
+      function pushHistory() {
+        history.push({
+          board: [...board],
+          movesCount,
+          awaitingSpawn
+        });
+        if (history.length > 100) history.shift();
+        btnUndo.disabled = false;
+      }
+
+      function initPalette() {
+        paletteGridEl.innerHTML = '';
+        for (let v = 1; v <= 12; v++) {
+          const btn = document.createElement('button');
+          btn.className = 'pal-btn' + (v === selectedTileValue ? ' active' : '');
+          btn.textContent = v;
+          btn.dataset.val = v;
+          btn.addEventListener('click', () => selectPalette(v));
+          paletteGridEl.appendChild(btn);
+        }
+        const eraseBtn = document.createElement('button');
+        eraseBtn.className = 'pal-btn pal-erase' + (selectedTileValue === 0 ? ' active' : '');
+        eraseBtn.textContent = '消去';
+        eraseBtn.dataset.val = 0;
+        eraseBtn.addEventListener('click', () => selectPalette(0));
+        paletteGridEl.appendChild(eraseBtn);
+
+        // Popover grid (1..12 + delete)
+        popoverGrid.innerHTML = '';
+        for (let v = 1; v <= 12; v++) {
+          const btn = document.createElement('button');
+          btn.className = 'pop-btn';
+          btn.textContent = v;
+          btn.addEventListener('click', () => {
+            if (editingCell) {
+              pushHistory();
+              setCell(editingCell.r, editingCell.c, v);
+              animMap.clear();
+              animMap.set(`${editingCell.r},${editingCell.c}`, 'spawn');
+              closePopover();
+              renderAll();
+            }
+          });
+          popoverGrid.appendChild(btn);
+        }
+        const delBtn = document.createElement('button');
+        delBtn.className = 'pop-btn pop-del';
+        delBtn.textContent = 'このマスを空にする';
+        delBtn.addEventListener('click', () => {
+          if (editingCell) {
+            pushHistory();
+            setCell(editingCell.r, editingCell.c, 0);
+            animMap.clear();
+            closePopover();
+            renderAll();
+          }
+        });
+        popoverGrid.appendChild(delBtn);
+      }
+
+      function selectPalette(val) {
+        selectedTileValue = val;
+        document.querySelectorAll('.pal-btn').forEach(b => {
+          b.classList.toggle('active', Number(b.dataset.val) === val);
+        });
+        paletteCurrentEl.textContent = val === 0 ? '選択中: 消去モード' : `選択中: ${val}`;
+      }
+
+      function openPopover(r, c, rect) {
+        editingCell = { r, c };
+        popoverPos.textContent = `${r + 1}行 ${c + 1}列`;
+        popoverBackdrop.classList.add('open');
+        popover.classList.add('open');
+
+        const popW = 224;
+        const popH = 215;
+        let left = rect.left + rect.width / 2 - popW / 2;
+        let top = rect.bottom + 8;
+        if (left + popW > window.innerWidth - 10) left = window.innerWidth - popW - 10;
+        if (left < 10) left = 10;
+        if (top + popH > window.innerHeight - 10) top = rect.top - popH - 8;
+
+        popover.style.left = `${left}px`;
+        popover.style.top = `${top}px`;
+      }
+
+      function closePopover() {
+        editingCell = null;
+        popoverBackdrop.classList.remove('open');
+        popover.classList.remove('open');
+      }
+
+      popoverBackdrop.addEventListener('click', closePopover);
+
+      function handleCellClick(r, c, cellEl) {
+        const cur = getCell(r, c);
+        if (selectedTileValue === 0) {
+          if (cur !== 0) {
+            pushHistory();
+            setCell(r, c, 0);
+            animMap.clear();
+            renderAll();
+          }
+          return;
+        }
+
+        if (cur === 0) {
+          pushHistory();
+          setCell(r, c, selectedTileValue);
+          awaitingSpawn = false;
+          animMap.clear();
+          animMap.set(`${r},${c}`, 'spawn');
+          renderAll();
+        } else {
+          // 既に数字がある場合はクイック編集メニューを開く
+          openPopover(r, c, cellEl.getBoundingClientRect());
+        }
+      }
+
+      function performMove(dir) {
+        const nextBoard = moveBoard(board, dir);
+        if (nextBoard === null) return;
+
+        pushHistory();
+        // 合体アニメ位置を簡易判定
+        animMap.clear();
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            const nv = (nextBoard[r] >> (c * 4)) & 0xF;
+            const ov = getCell(r, c);
+            if (nv > 0 && nv !== ov) {
+              animMap.set(`${r},${c}`, 'merge');
+            }
+          }
+        }
+
+        board = nextBoard;
+        movesCount++;
+        awaitingSpawn = true;
+        renderAll();
+      }
+
+      function undo() {
+        if (history.length === 0) return;
+        const prev = history.pop();
+        board = prev.board;
+        movesCount = prev.movesCount;
+        awaitingSpawn = prev.awaitingSpawn;
+        animMap.clear();
+        btnUndo.disabled = history.length === 0;
+        renderAll();
+      }
+
+      function resetGame() {
+        if (movesCount > 0 || countEmpty(board) < 16) {
+          pushHistory();
+        }
+        board = [0, 0, 0, 0];
+        movesCount = 0;
+        awaitingSpawn = false;
+        animMap.clear();
+        renderAll();
+      }
+
+      function renderBoard() {
+        boardEl.innerHTML = '';
+        boardEl.classList.toggle('awaiting', awaitingSpawn);
+
+        let maxTile = 0;
+        let filledCount = 0;
+
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            const val = getCell(r, c);
+            if (val > 0) {
+              filledCount++;
+              if (val > maxTile) maxTile = val;
+            }
+
+            const cell = document.createElement('div');
+            cell.className = 'cell ' + (val === 0 ? 'empty' : 'filled');
+            if (val > 0) {
+              cell.classList.add(val <= 12 ? `tile-${val}` : 'tile-high');
+              cell.textContent = val;
+            }
+
+            const anim = animMap.get(`${r},${c}`);
+            if (anim === 'spawn') cell.classList.add('anim-spawn');
+            else if (anim === 'merge') cell.classList.add('anim-merge');
+
+            cell.addEventListener('click', () => handleCellClick(r, c, cell));
+            boardEl.appendChild(cell);
+          }
+        }
+
+        statMaxEl.textContent = maxTile;
+        statMovesEl.textContent = movesCount;
+
+        // Status banner update
+        statusBannerEl.classList.remove('awaiting-spawn', 'goal-reached');
+        if (maxTile >= 12) {
+          statusBannerEl.classList.add('goal-reached');
+          statusTextEl.textContent = `🎉 祝・12 達成！そのまま続行してさらなる高みも目指せます`;
+        } else if (filledCount === 0) {
+          statusTextEl.textContent = '空きマスをクリックして、最初の数字を入力してください';
+        } else if (awaitingSpawn) {
+          statusBannerEl.classList.add('awaiting-spawn');
+          statusTextEl.textContent = '新しく出現したマスをクリックして数字を入力してください';
+        } else {
+          statusTextEl.textContent = 'ナビゲートされた十字キーを押してスライド＆合体！';
+        }
+
+        return { maxTile, filledCount };
+      }
+
+      function updateNavigation(filledCount) {
+        // 移動可能方向チェック
+        const canMove = {};
+        let anyMovable = false;
+        for (const d of DIRS) {
+          canMove[d] = moveBoard(board, d) !== null;
+          if (canMove[d]) anyMovable = true;
+          const btn = document.getElementById(`dpad-${d}`);
+          btn.disabled = !canMove[d];
+          btn.classList.remove('recommended');
+          const oldTag = btn.querySelector('.best-tag');
+          if (oldTag) oldTag.remove();
+        }
+
+        const dirRows = document.querySelectorAll('.dir-row');
+
+        if (filledCount === 0) {
+          bestMoveBox.classList.remove('has-best');
+          bestArrowIcon.textContent = '−';
+          bestTextMain.textContent = '盤面を入力してください';
+          bestTextSub.textContent = '空きマスをクリックすると数字を配置できます';
+          calcBadge.textContent = 'Waiting';
+          dirRows.forEach(row => {
+            row.className = 'dir-row';
+            row.querySelector('.bar-fill').style.width = '0%';
+            row.querySelector('.dir-pct').textContent = '-';
+          });
+          return;
+        }
+
+        if (!anyMovable) {
+          bestMoveBox.classList.remove('has-best');
+          bestArrowIcon.textContent = '×';
+          bestTextMain.textContent = '移動可能な方向がありません';
+          bestTextSub.textContent = '「1手戻す」か盤面を編集してください';
+          calcBadge.textContent = 'Game Over';
+          dirRows.forEach(row => {
+            row.className = 'dir-row';
+            row.querySelector('.bar-fill').style.width = '0%';
+            row.querySelector('.dir-pct').textContent = '不可';
+          });
+          return;
+        }
+
+        // Expectimax 計算
+        const { results, depth } = searchBestMoves(board, cornerMode);
+        calcBadge.textContent = `Depth ${depth}`;
+
+        let bestDir = null;
+        let bestVal = -Infinity;
+        let minVal = Infinity;
+
+        for (const d of DIRS) {
+          const v = results[d];
+          if (v !== null) {
+            if (v > bestVal) { bestVal = v; bestDir = d; }
+            if (v < minVal) { minVal = v; }
+          }
+        }
+
+        // UI反映
+        if (bestDir) {
+          bestMoveBox.classList.add('has-best');
+          bestArrowIcon.textContent = DIR_META[bestDir].arrow;
+          bestTextMain.textContent = awaitingSpawn
+            ? `仮の推奨: ${DIR_META[bestDir].label}`
+            : `おすすめ: ${DIR_META[bestDir].label}`;
+          bestTextSub.textContent = awaitingSpawn
+            ? '先に出現タイルを入力すると正確に再計算されます'
+            : '角の維持・スネーク配列・空きマス数を総合評価';
+
+          const bestBtn = document.getElementById(`dpad-${bestDir}`);
+          bestBtn.classList.add('recommended');
+          const tag = document.createElement('span');
+          tag.className = 'best-tag';
+          tag.textContent = 'BEST';
+          bestBtn.appendChild(tag);
+        }
+
+        const span = Math.max(1, bestVal - minVal);
+        dirRows.forEach(row => {
+          const d = row.dataset.dir;
+          const v = results[d];
+          row.className = 'dir-row';
+          const fill = row.querySelector('.bar-fill');
+          const pctEl = row.querySelector('.dir-pct');
+
+          if (v === null) {
+            fill.style.width = '0%';
+            pctEl.textContent = '移動不可';
+            return;
+          }
+
+          let pct;
+          if (bestVal === minVal) {
+            pct = 100;
+          } else {
+            pct = Math.round(15 + 85 * ((v - minVal) / span));
+          }
+
+          if (d === bestDir) {
+            row.classList.add('is-best');
+            pctEl.textContent = '最適 (100%)';
+          } else {
+            if (pct >= 75) row.classList.add('is-good');
+            pctEl.textContent = `${pct}%`;
+          }
+          fill.style.width = `${pct}%`;
+        });
+      }
+
+      function renderAll() {
+        const { filledCount } = renderBoard();
+        updateNavigation(filledCount);
+      }
+
+      // Event Listeners
+      document.querySelectorAll('.dpad-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          performMove(btn.dataset.dir);
+        });
+      });
+
+      document.querySelectorAll('.corner-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.corner-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          cornerMode = btn.dataset.corner;
+          renderAll();
+        });
+      });
+
+      btnUndo.addEventListener('click', undo);
+      btnReset.addEventListener('click', resetGame);
+
+      window.addEventListener('keydown', (e) => {
+        if (popover.classList.contains('open')) {
+          if (e.key === 'Escape') closePopover();
+          return;
+        }
+        const keyMap = {
+          ArrowUp: 'up', w: 'up', W: 'up',
+          ArrowLeft: 'left', a: 'left', A: 'left',
+          ArrowDown: 'down', s: 'down', S: 'down',
+          ArrowRight: 'right', d: 'right', D: 'right'
+        };
+        if (keyMap[e.key]) {
+          e.preventDefault();
+          performMove(keyMap[e.key]);
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          undo();
+        }
+      });
+
+      // 初期セットアップ
+      initPalette();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
