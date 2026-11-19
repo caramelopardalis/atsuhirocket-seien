@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>2048 Navigator (1-12)</title>
+  <title>2048 Navigator (1-12) + Item Advisor</title>
   <style>
     :root {
       --bg-base: #0b1120;
       --bg-card: rgba(30, 41, 59, 0.72);
-      --bg-card-solid: #162033;
       --bg-board: #0f172a;
       --border-subtle: rgba(148, 163, 184, 0.16);
       --text-main: #f1f5f9;
@@ -19,6 +18,7 @@
       --best-glow: rgba(16, 185, 129, 0.45);
       --warn: #f59e0b;
       --danger: #ef4444;
+      --item-purple: #a855f7;
     }
 
     * {
@@ -39,16 +39,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px 16px 40px;
+      padding: 18px 14px 42px;
       line-height: 1.5;
     }
 
     .container {
       width: 100%;
-      max-width: 960px;
+      max-width: 1000px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
     }
 
     /* Header */
@@ -58,7 +58,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      padding: 14px 20px;
+      padding: 14px 18px;
       background: var(--bg-card);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border-subtle);
@@ -86,33 +86,32 @@
     }
 
     .brand h1 {
-      font-size: 1.15rem;
+      font-size: 1.12rem;
       font-weight: 700;
-      letter-spacing: 0.02em;
     }
 
     .brand p {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--text-muted);
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     .stat-pill {
       background: rgba(15, 23, 42, 0.8);
       border: 1px solid var(--border-subtle);
-      padding: 6px 14px;
+      padding: 5px 12px;
       border-radius: 10px;
       text-align: center;
     }
 
     .stat-label {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--text-muted);
@@ -120,7 +119,7 @@
     }
 
     .stat-val {
-      font-size: 1rem;
+      font-size: 0.98rem;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       color: #fff;
@@ -131,25 +130,21 @@
       border: 1px solid var(--border-subtle);
       background: rgba(51, 65, 85, 0.5);
       color: var(--text-main);
-      padding: 9px 14px;
+      padding: 8px 13px;
       border-radius: 10px;
-      font-size: 0.85rem;
+      font-size: 0.83rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     .btn:hover:not(:disabled) {
       background: rgba(71, 85, 105, 0.7);
       border-color: rgba(148, 163, 184, 0.35);
       transform: translateY(-1px);
-    }
-
-    .btn:active:not(:disabled) {
-      transform: translateY(0);
     }
 
     .btn:disabled {
@@ -170,15 +165,21 @@
     /* Main Grid Layout */
     .main-layout {
       display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 18px;
+      grid-template-columns: 1fr 390px;
+      gap: 16px;
       align-items: start;
     }
 
-    @media (max-width: 820px) {
+    @media (max-width: 860px) {
       .main-layout {
         grid-template-columns: 1fr;
       }
+    }
+
+    .left-col, .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
     .panel {
@@ -186,28 +187,44 @@
       backdrop-filter: blur(12px);
       border: 1px solid var(--border-subtle);
       border-radius: 18px;
-      padding: 18px;
+      padding: 16px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     /* Status Banner */
     .status-banner {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
+      gap: 9px;
       padding: 10px 14px;
       border-radius: 12px;
       background: rgba(15, 23, 42, 0.7);
       border: 1px solid var(--border-subtle);
       margin-bottom: 14px;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
     }
 
     .status-banner.awaiting-spawn {
       border-color: rgba(56, 189, 248, 0.5);
       background: rgba(56, 189, 248, 0.1);
       color: #bae6fd;
+    }
+
+    .status-banner.danger-alert {
+      border-color: rgba(239, 68, 68, 0.6);
+      background: rgba(239, 68, 68, 0.14);
+      color: #fecaca;
     }
 
     .status-banner.goal-reached {
@@ -225,16 +242,51 @@
       box-shadow: 0 0 8px var(--accent);
     }
 
-    .awaiting-spawn .status-dot {
-      animation: pulseDot 1.2s infinite;
-    }
+    .awaiting-spawn .status-dot { animation: pulseDot 1.2s infinite; }
+    .danger-alert .status-dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); animation: pulseDot 0.9s infinite; }
 
     @keyframes pulseDot {
       0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.4); opacity: 0.5; }
+      50% { transform: scale(1.45); opacity: 0.45; }
     }
 
-    /* 4x4 Board */
+    /* Board with coordinate labels */
+    .board-container {
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .col-coords {
+      display: grid;
+      grid-template-columns: 18px repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 12px 4px;
+      font-size: 0.68rem;
+      color: rgba(148, 163, 184, 0.55);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .board-with-rows {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .row-coords {
+      display: grid;
+      grid-template-rows: repeat(4, 1fr);
+      height: 100%;
+      padding: 12px 0;
+      gap: 10px;
+      font-size: 0.68rem;
+      color: rgba(148, 163, 184, 0.55);
+      align-items: center;
+      text-align: center;
+      font-weight: 600;
+    }
+
     .board-wrapper {
       position: relative;
       background: var(--bg-board);
@@ -242,8 +294,6 @@
       padding: 12px;
       border: 1px solid rgba(148, 163, 184, 0.15);
       box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.45);
-      max-width: 440px;
-      margin: 0 auto;
     }
 
     .board {
@@ -261,7 +311,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(1.5rem, 4.5vw, 2.2rem);
+      font-size: clamp(1.45rem, 4.4vw, 2.15rem);
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       cursor: pointer;
@@ -288,10 +338,9 @@
 
     .cell.empty::after {
       content: '+';
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 400;
       color: rgba(148, 163, 184, 0.2);
-      transition: color 0.15s;
     }
 
     .cell.empty:hover::after {
@@ -303,13 +352,31 @@
       transform: translateY(-1px);
     }
 
-    .cell.anim-spawn {
-      animation: popIn 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    /* Item target highlight on board */
+    .cell.item-target {
+      outline: 3px solid #f472b6;
+      outline-offset: -1px;
+      box-shadow: 0 0 20px rgba(244, 114, 182, 0.65) !important;
+      z-index: 2;
     }
 
-    .cell.anim-merge {
-      animation: mergePop 0.24s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    .item-target-badge {
+      position: absolute;
+      top: -7px;
+      right: -5px;
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 99px;
+      background: #ec4899;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.03em;
+      pointer-events: none;
     }
+
+    .cell.anim-spawn { animation: popIn 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+    .cell.anim-merge { animation: mergePop 0.24s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
 
     @keyframes popIn {
       0% { transform: scale(0.5); opacity: 0.3; }
@@ -329,7 +396,7 @@
     .tile-4  { background: linear-gradient(135deg, #0d9488, #0f766e); color: #ccfbf1; border-color: rgba(45,212,191,0.45); }
     .tile-5  { background: linear-gradient(135deg, #059669, #047857); color: #d1fae5; border-color: rgba(52,211,153,0.45); }
     .tile-6  { background: linear-gradient(135deg, #65a30d, #4d7c0f); color: #ecfccb; border-color: rgba(163,230,53,0.45); }
-    .tile-7  { background: linear-gradient(135deg, #d97706, #b45309); color: #fef3c7; border-color: rgba(251,191,36,0.5); box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25); }
+    .tile-7  { background: linear-gradient(135deg, #d97706, #b45309); color: #fef3c7; border-color: rgba(251,191,36,0.5); box-shadow: 0 4px 14px rgba(217, 119, 0.25); }
     .tile-8  { background: linear-gradient(135deg, #ea580c, #c2410c); color: #ffedd5; border-color: rgba(251,146,60,0.55); box-shadow: 0 4px 16px rgba(234, 88, 12, 0.3); }
     .tile-9  { background: linear-gradient(135deg, #e11d48, #be123c); color: #ffe4e6; border-color: rgba(251,113,133,0.55); box-shadow: 0 4px 18px rgba(225, 29, 72, 0.35); }
     .tile-10 { background: linear-gradient(135deg, #9333ea, #7e22ce); color: #f3e8ff; border-color: rgba(192,132,252,0.6); box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4); }
@@ -340,15 +407,11 @@
       border-color: #fff;
       box-shadow: 0 0 28px rgba(253, 224, 71, 0.65), 0 0 12px rgba(56, 189, 248, 0.5);
     }
-    .tile-high {
-      background: linear-gradient(135deg, #ffffff, #cbd5e1);
-      color: #0f172a;
-      box-shadow: 0 0 28px rgba(255, 255, 255, 0.6);
-    }
+    .tile-high { background: linear-gradient(135deg, #ffffff, #cbd5e1); color: #0f172a; }
 
     /* Palette */
     .palette-section {
-      margin-top: 16px;
+      margin-top: 14px;
       max-width: 440px;
       margin-left: auto;
       margin-right: auto;
@@ -358,8 +421,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
-      font-size: 0.78rem;
+      margin-bottom: 7px;
+      font-size: 0.76rem;
       color: var(--text-muted);
     }
 
@@ -374,24 +437,21 @@
       border: 1px solid var(--border-subtle);
       background: rgba(15, 23, 42, 0.75);
       color: var(--text-main);
-      height: 36px;
+      height: 35px;
       border-radius: 8px;
       font-weight: 700;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       cursor: pointer;
       transition: all 0.12s ease;
     }
 
-    .pal-btn:hover {
-      background: rgba(51, 65, 85, 0.7);
-    }
+    .pal-btn:hover { background: rgba(51, 65, 85, 0.7); }
 
     .pal-btn.active {
       border-color: var(--accent);
       background: rgba(56, 189, 248, 0.2);
       color: #fff;
       box-shadow: 0 0 12px var(--accent-glow);
-      transform: translateY(-1px);
     }
 
     .pal-btn.pal-erase {
@@ -403,37 +463,18 @@
     .pal-btn.pal-erase.active {
       border-color: var(--danger);
       background: rgba(239, 68, 68, 0.22);
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
-    }
-
-    /* Right Column: Navigator & D-Pad */
-    .right-col {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .section-title {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
     /* Best Move Card */
     .best-move-box {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 14px;
+      gap: 13px;
+      padding: 12px 14px;
       border-radius: 14px;
       background: rgba(15, 23, 42, 0.75);
       border: 1px solid var(--border-subtle);
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .best-move-box.has-best {
@@ -441,16 +482,21 @@
       background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(15, 23, 42, 0.85));
     }
 
+    .best-move-box.is-danger {
+      border-color: rgba(239, 68, 68, 0.55);
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(15, 23, 42, 0.9));
+    }
+
     .best-arrow-icon {
-      width: 52px;
-      height: 52px;
+      width: 48px;
+      height: 48px;
       border-radius: 12px;
       background: rgba(16, 185, 129, 0.2);
       border: 1px solid rgba(16, 185, 129, 0.5);
       color: #34d399;
       display: grid;
       place-items: center;
-      font-size: 1.7rem;
+      font-size: 1.6rem;
       font-weight: 800;
       flex-shrink: 0;
     }
@@ -461,47 +507,36 @@
       color: var(--text-muted);
     }
 
-    .best-text-main {
-      font-size: 1.05rem;
-      font-weight: 700;
+    .best-move-box.is-danger .best-arrow-icon {
+      background: rgba(239, 68, 68, 0.22);
+      border-color: rgba(239, 68, 68, 0.55);
+      color: #fca5a5;
     }
 
-    .best-text-sub {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
+    .best-text-main { font-size: 1rem; font-weight: 700; }
+    .best-text-sub { font-size: 0.76rem; color: var(--text-muted); margin-top: 2px; }
 
     /* Direction Scores */
     .dir-evals {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-bottom: 14px;
+      gap: 7px;
+      margin-bottom: 12px;
     }
 
     .dir-row {
       display: grid;
-      grid-template-columns: 54px 1fr 56px;
+      grid-template-columns: 52px 1fr 64px;
       align-items: center;
       gap: 8px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
     }
 
-    .dir-name {
-      color: var(--text-muted);
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .dir-row.is-best .dir-name {
-      color: #34d399;
-    }
+    .dir-name { color: var(--text-muted); font-weight: 600; }
+    .dir-row.is-best .dir-name { color: #34d399; }
 
     .bar-track {
-      height: 8px;
+      height: 7px;
       background: rgba(15, 23, 42, 0.9);
       border-radius: 99px;
       overflow: hidden;
@@ -513,49 +548,33 @@
       width: 0%;
       border-radius: 99px;
       background: #475569;
-      transition: width 0.22s ease, background 0.22s ease;
+      transition: width 0.2s ease;
     }
 
-    .dir-row.is-best .bar-fill {
-      background: linear-gradient(90deg, #10b981, #34d399);
-    }
+    .dir-row.is-best .bar-fill { background: linear-gradient(90deg, #10b981, #34d399); }
+    .dir-row.is-good .bar-fill { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+    .dir-pct { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: 0.72rem; }
 
-    .dir-row.is-good .bar-fill {
-      background: linear-gradient(90deg, #0284c7, #38bdf8);
-    }
-
-    .dir-pct {
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-      color: var(--text-muted);
-      font-size: 0.74rem;
-    }
-
-    /* Corner Strategy Selector */
+    /* Corner Selector */
     .corner-selector {
       display: flex;
       gap: 5px;
       flex-wrap: wrap;
-      padding-top: 10px;
+      padding-top: 9px;
       border-top: 1px solid var(--border-subtle);
       align-items: center;
     }
 
-    .corner-label {
-      font-size: 0.73rem;
-      color: var(--text-muted);
-      margin-right: 4px;
-    }
+    .corner-label { font-size: 0.72rem; color: var(--text-muted); margin-right: 2px; }
 
     .corner-btn {
       border: 1px solid var(--border-subtle);
       background: rgba(15, 23, 42, 0.65);
       color: var(--text-muted);
-      font-size: 0.72rem;
+      font-size: 0.71rem;
       padding: 4px 8px;
       border-radius: 6px;
       cursor: pointer;
-      transition: all 0.12s;
     }
 
     .corner-btn.active {
@@ -569,13 +588,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .dpad {
       display: grid;
-      grid-template-columns: repeat(3, 68px);
-      grid-template-rows: repeat(3, 68px);
+      grid-template-columns: repeat(3, 64px);
+      grid-template-rows: repeat(3, 64px);
       gap: 8px;
     }
 
@@ -585,57 +604,42 @@
       border: 1px solid rgba(148, 163, 184, 0.22);
       background: linear-gradient(145deg, #1e293b, #0f172a);
       color: var(--text-main);
-      border-radius: 16px;
-      font-size: 1.5rem;
+      border-radius: 15px;
+      font-size: 1.45rem;
       font-weight: 700;
       cursor: pointer;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       transition: all 0.14s ease;
     }
 
-    .dpad-btn:hover:not(:disabled) {
-      border-color: rgba(148, 163, 184, 0.5);
-      transform: translateY(-2px);
-    }
-
-    .dpad-btn:active:not(:disabled) {
-      transform: translateY(1px) scale(0.96);
-    }
-
-    .dpad-btn:disabled {
-      opacity: 0.25;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
+    .dpad-btn:hover:not(:disabled) { border-color: rgba(148, 163, 184, 0.5); transform: translateY(-2px); }
+    .dpad-btn:active:not(:disabled) { transform: translateY(1px) scale(0.96); }
+    .dpad-btn:disabled { opacity: 0.25; cursor: not-allowed; box-shadow: none; }
 
     .dpad-btn.recommended {
       border-color: var(--best);
       background: linear-gradient(145deg, rgba(16, 185, 129, 0.32), rgba(6, 78, 59, 0.6));
       color: #ecfdf5;
-      box-shadow: 0 0 22px var(--best-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
       animation: bestPulse 1.8s infinite ease-in-out;
     }
 
     @keyframes bestPulse {
-      0%, 100% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.35); }
-      50% { box-shadow: 0 0 26px rgba(16, 185, 129, 0.7); }
+      0%, 100% { box-shadow: 0 0 14px rgba(16, 185, 129, 0.35); }
+      50% { box-shadow: 0 0 24px rgba(16, 185, 129, 0.7); }
     }
 
     .best-tag {
       position: absolute;
       top: -8px;
-      font-size: 0.58rem;
+      font-size: 0.56rem;
       font-weight: 800;
-      letter-spacing: 0.06em;
       background: var(--best);
       color: #022c22;
       padding: 1px 6px;
       border-radius: 99px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     }
 
     .dpad-center {
@@ -644,9 +648,8 @@
       border: 1px solid rgba(148, 163, 184, 0.1);
       display: grid;
       place-items: center;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: var(--text-muted);
-      letter-spacing: 0.05em;
     }
 
     .dpad-up    { grid-column: 2; grid-row: 1; }
@@ -655,10 +658,179 @@
     .dpad-right { grid-column: 3; grid-row: 2; }
     .dpad-down  { grid-column: 2; grid-row: 3; }
 
-    .kbd-hint {
+    .kbd-hint { font-size: 0.72rem; color: var(--text-muted); text-align: center; }
+
+    /* =========================================================
+       Item Advisor Panel
+       ========================================================= */
+    .item-panel.urgent {
+      border-color: rgba(245, 158, 11, 0.65);
+      background: linear-gradient(160deg, rgba(245, 158, 11, 0.12), rgba(30, 41, 59, 0.85));
+      box-shadow: 0 0 28px rgba(245, 158, 11, 0.18);
+    }
+
+    .item-panel.critical {
+      border-color: rgba(239, 68, 68, 0.75);
+      background: linear-gradient(160deg, rgba(239, 68, 68, 0.18), rgba(30, 41, 59, 0.9));
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.25);
+    }
+
+    .item-inventory {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .inv-chip {
+      appearance: none;
+      border: 1px solid rgba(168, 85, 247, 0.45);
+      background: rgba(168, 85, 247, 0.14);
+      color: #f3e8ff;
+      border-radius: 10px;
+      padding: 7px 6px;
       font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: all 0.15s;
+    }
+
+    .inv-chip:hover {
+      background: rgba(168, 85, 247, 0.25);
+    }
+
+    .inv-chip .inv-status {
+      font-size: 0.64rem;
+      font-weight: 600;
+      color: #d8b4fe;
+    }
+
+    .inv-chip.used {
+      border-color: var(--border-subtle);
+      background: rgba(15, 23, 42, 0.5);
       color: var(--text-muted);
-      text-align: center;
+      opacity: 0.55;
+    }
+
+    .inv-chip.used .inv-status {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .item-verdict {
+      padding: 10px 12px;
+      border-radius: 11px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.8rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .item-verdict.verdict-critical {
+      border-color: rgba(239, 68, 68, 0.6);
+      background: rgba(239, 68, 68, 0.14);
+      color: #fecaca;
+    }
+
+    .item-verdict.verdict-warn {
+      border-color: rgba(245, 158, 11, 0.55);
+      background: rgba(245, 158, 11, 0.12);
+      color: #fde68a;
+    }
+
+    .item-verdict.verdict-save {
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #cbd5e1;
+    }
+
+    .item-recs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .item-rec-card {
+      padding: 10px 12px;
+      border-radius: 11px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+
+    .item-rec-card:hover {
+      border-color: rgba(244, 114, 182, 0.6);
+      background: rgba(30, 41, 59, 0.85);
+    }
+
+    .item-rec-card.top-pick {
+      border-color: rgba(244, 114, 182, 0.6);
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.14), rgba(15, 23, 42, 0.85));
+    }
+
+    .rec-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .rec-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rec-rank-badge {
+      font-size: 0.64rem;
+      padding: 1px 6px;
+      border-radius: 99px;
+      background: #ec4899;
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .rec-detail {
+      font-size: 0.78rem;
+      color: #e2e8f0;
+      margin-bottom: 6px;
+    }
+
+    .rec-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .btn-apply-item {
+      appearance: none;
+      border: 1px solid rgba(236, 72, 153, 0.55);
+      background: rgba(236, 72, 153, 0.2);
+      color: #fbcfe8;
+      padding: 4px 9px;
+      border-radius: 7px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .btn-apply-item:hover {
+      background: rgba(236, 72, 153, 0.38);
+      color: #fff;
     }
 
     /* Cell Quick Edit Popover */
@@ -669,9 +841,7 @@
       display: none;
     }
 
-    .popover-backdrop.open {
-      display: block;
-    }
+    .popover-backdrop.open { display: block; }
 
     .cell-popover {
       position: fixed;
@@ -685,10 +855,7 @@
       display: none;
     }
 
-    .cell-popover.open {
-      display: block;
-      animation: popIn 0.12s ease-out;
-    }
+    .cell-popover.open { display: block; animation: popIn 0.12s ease-out; }
 
     .popover-title {
       font-size: 0.74rem;
@@ -715,9 +882,7 @@
       cursor: pointer;
     }
 
-    .pop-btn:hover {
-      background: #334155;
-    }
+    .pop-btn:hover { background: #334155; }
 
     .pop-btn.pop-del {
       grid-column: span 4;
@@ -735,14 +900,14 @@
       <div class="brand">
         <div class="brand-badge">12</div>
         <div>
-          <h1>2048 Navigator <span style="font-weight:400; color:var(--text-muted); font-size:0.85rem;">(1–12)</span></h1>
-          <p>同じ数字を合体させて +1（1 → 2 → … → 12）｜AIが最適手をナビゲート</p>
+          <h1>2048 Navigator <span style="font-weight:400; color:var(--text-muted); font-size:0.84rem;">(1–12 / 1手1タイル出現)</span></h1>
+          <p>最適操作ナビ＋課金アイテム（消去 / 入替 / +1）危機回避アドバイザー</p>
         </div>
       </div>
 
       <div class="header-actions">
         <div class="stat-pill">
-          <span class="stat-label">最大タイル</span>
+          <span class="stat-label">最大</span>
           <span class="stat-val" id="stat-max">0</span>
         </div>
         <div class="stat-pill">
@@ -756,29 +921,40 @@
 
     <div class="main-layout">
       <!-- Left Column: Board & Tile Input -->
-      <div class="panel">
-        <div class="status-banner" id="status-banner">
-          <div style="display:flex; align-items:center; gap:9px;">
+      <div class="left-col">
+        <div class="panel">
+          <div class="status-banner" id="status-banner">
             <span class="status-dot"></span>
-            <span id="status-text">盤面の空きマスをクリックして、現在の数字（通常は1が2つ）を入力してください</span>
+            <span id="status-text">盤面の空きマスをクリックして、現在の数字を入力してください</span>
           </div>
-        </div>
 
-        <div class="board-wrapper">
-          <div class="board" id="board"></div>
-        </div>
-
-        <div class="palette-section">
-          <div class="palette-header">
-            <span>空きマスのクリックで配置する数字：</span>
-            <span id="palette-current" style="color: var(--accent); font-weight: 700;">選択中: 1</span>
+          <div class="board-container">
+            <div class="col-coords">
+              <span></span><span>1列</span><span>2列</span><span>3列</span><span>4列</span>
+            </div>
+            <div class="board-with-rows">
+              <div class="row-coords">
+                <span>1行</span><span>2行</span><span>3行</span><span>4行</span>
+              </div>
+              <div class="board-wrapper">
+                <div class="board" id="board"></div>
+              </div>
+            </div>
           </div>
-          <div class="palette-grid" id="palette-grid"></div>
+
+          <div class="palette-section">
+            <div class="palette-header">
+              <span>空きマスのクリックで配置する数字：</span>
+              <span id="palette-current" style="color: var(--accent); font-weight: 700;">選択中: 1</span>
+            </div>
+            <div class="palette-grid" id="palette-grid"></div>
+          </div>
         </div>
       </div>
 
-      <!-- Right Column: AI Navigation & D-Pad -->
+      <!-- Right Column: AI Navigation, D-Pad, Item Advisor -->
       <div class="right-col">
+        <!-- Normal Navigation -->
         <div class="panel">
           <div class="section-title">
             <span>AI 最適操作ナビゲーション</span>
@@ -794,26 +970,10 @@
           </div>
 
           <div class="dir-evals" id="dir-evals">
-            <div class="dir-row" data-dir="up">
-              <span class="dir-name">↑ 上</span>
-              <div class="bar-track"><div class="bar-fill"></div></div>
-              <span class="dir-pct">-</span>
-            </div>
-            <div class="dir-row" data-dir="left">
-              <span class="dir-name">← 左</span>
-              <div class="bar-track"><div class="bar-fill"></div></div>
-              <span class="dir-pct">-</span>
-            </div>
-            <div class="dir-row" data-dir="down">
-              <span class="dir-name">↓ 下</span>
-              <div class="bar-track"><div class="bar-fill"></div></div>
-              <span class="dir-pct">-</span>
-            </div>
-            <div class="dir-row" data-dir="right">
-              <span class="dir-name">→ 右</span>
-              <div class="bar-track"><div class="bar-fill"></div></div>
-              <span class="dir-pct">-</span>
-            </div>
+            <div class="dir-row" data-dir="up"><span class="dir-name">↑ 上</span><div class="bar-track"><div class="bar-fill"></div></div><span class="dir-pct">-</span></div>
+            <div class="dir-row" data-dir="left"><span class="dir-name">← 左</span><div class="bar-track"><div class="bar-fill"></div></div><span class="dir-pct">-</span></div>
+            <div class="dir-row" data-dir="down"><span class="dir-name">↓ 下</span><div class="bar-track"><div class="bar-fill"></div></div><span class="dir-pct">-</span></div>
+            <div class="dir-row" data-dir="right"><span class="dir-name">→ 右</span><div class="bar-track"><div class="bar-fill"></div></div><span class="dir-pct">-</span></div>
           </div>
 
           <div class="corner-selector">
@@ -826,6 +986,7 @@
           </div>
         </div>
 
+        <!-- D-Pad -->
         <div class="panel dpad-container">
           <div class="section-title" style="width:100%; margin-bottom:2px;">
             <span>十字キー操作</span>
@@ -840,13 +1001,43 @@
             <button class="dpad-btn dpad-down" id="dpad-down" data-dir="down" aria-label="下">↓</button>
           </div>
 
-          <div class="kbd-hint">キーボードの <strong>↑ ↓ ← →</strong> または <strong>W A S D</strong> でも操作可能</div>
+          <div class="kbd-hint">キーボード <strong>↑ ↓ ← →</strong> / <strong>WASD</strong> でも操作可</div>
+        </div>
+
+        <!-- Item Advisor Panel -->
+        <div class="panel item-panel" id="item-panel">
+          <div class="section-title">
+            <span>課金アイテム相談（各1回まで）</span>
+            <span style="font-size:0.68rem; color:var(--text-muted);">タップで使用済切替</span>
+          </div>
+
+          <div class="item-inventory">
+            <button class="inv-chip" id="inv-erase" data-item="erase">
+              <span>🗑 1マス消去</span>
+              <span class="inv-status">残り 1回</span>
+            </button>
+            <button class="inv-chip" id="inv-swap" data-item="swap">
+              <span>⇄ 2マス入替</span>
+              <span class="inv-status">残り 1回</span>
+            </button>
+            <button class="inv-chip" id="inv-upgrade" data-item="upgrade">
+              <span>⬆ 7以下を+1</span>
+              <span class="inv-status">残り 1回</span>
+            </button>
+          </div>
+
+          <div class="item-verdict" id="item-verdict">
+            <span>💡</span>
+            <span>盤面を入力するとアイテムの使い所を判定します</span>
+          </div>
+
+          <div class="item-recs" id="item-recs"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Quick Edit Popover for filled cells -->
+  <!-- Quick Edit Popover -->
   <div class="popover-backdrop" id="popover-backdrop"></div>
   <div class="cell-popover" id="cell-popover">
     <div class="popover-title">
@@ -859,14 +1050,12 @@
   <script>
     (() => {
       // =========================================================
-      // 1. 高速ビットボード & ルックアップテーブル (Expectimax用)
+      // 1. 高速ビットボード & ルックアップテーブル
       // =========================================================
-      // 各行は16bit整数 (4bit × 4マス: c0はbit0-3, c1はbit4-7, c2はbit8-11, c3はbit12-15)
       const moveLeftTable = new Uint16Array(65536);
       const moveRightTable = new Uint16Array(65536);
       const rowHeurTable = new Float64Array(65536);
 
-      // タイル価値 (1..15)
       const TILE_VAL = new Float64Array(16);
       const TILE_SUM_VAL = new Float64Array(16);
       for (let t = 1; t < 16; t++) {
@@ -882,16 +1071,9 @@
       }
 
       function slideRowLeftRaw(row) {
-        const c = [
-          row & 0xF,
-          (row >> 4) & 0xF,
-          (row >> 8) & 0xF,
-          (row >> 12) & 0xF
-        ];
+        const c = [row & 0xF, (row >> 4) & 0xF, (row >> 8) & 0xF, (row >> 12) & 0xF];
         const nz = [];
-        for (let i = 0; i < 4; i++) {
-          if (c[i] !== 0) nz.push(c[i]);
-        }
+        for (let i = 0; i < 4; i++) if (c[i] !== 0) nz.push(c[i]);
         const out = [0, 0, 0, 0];
         let idx = 0;
         for (let i = 0; i < nz.length; i++) {
@@ -911,61 +1093,35 @@
           moveLeftTable[row] = left;
           moveRightTable[reverseRow(row)] = reverseRow(left);
 
-          // 行単位の基本ヒューリスティック評価
-          const a = [
-            row & 0xF,
-            (row >> 4) & 0xF,
-            (row >> 8) & 0xF,
-            (row >> 12) & 0xF
-          ];
-
-          let empty = 0;
-          let sum = 0;
-          let merges = 0;
-          let prev = 0;
-          let counter = 0;
-
+          const a = [row & 0xF, (row >> 4) & 0xF, (row >> 8) & 0xF, (row >> 12) & 0xF];
+          let empty = 0, sum = 0, merges = 0, prev = 0, counter = 0;
           for (let i = 0; i < 4; i++) {
             const v = a[i];
             if (v === 0) {
               empty++;
             } else {
               sum += TILE_SUM_VAL[v];
-              if (prev === v) {
-                counter++;
-              } else if (counter > 0) {
+              if (prev === v) counter++;
+              else if (counter > 0) {
                 merges += (1 + counter) * TILE_VAL[prev];
                 counter = 0;
               }
               prev = v;
             }
           }
-          if (counter > 0) {
-            merges += (1 + counter) * TILE_VAL[prev];
-          }
+          if (counter > 0) merges += (1 + counter) * TILE_VAL[prev];
 
-          let monoLeft = 0;
-          let monoRight = 0;
+          let monoLeft = 0, monoRight = 0;
           for (let i = 0; i < 3; i++) {
-            const v1 = TILE_VAL[a[i]];
-            const v2 = TILE_VAL[a[i + 1]];
+            const v1 = TILE_VAL[a[i]], v2 = TILE_VAL[a[i + 1]];
             if (v1 > v2) monoLeft += v1 - v2;
             else monoRight += v2 - v1;
           }
-          const monoPenalty = Math.min(monoLeft, monoRight);
-
-          rowHeurTable[row] =
-            empty * 60 +
-            merges * 1.6 +
-            sum * 0.65 -
-            monoPenalty * 0.9;
+          rowHeurTable[row] = empty * 60 + merges * 1.6 + sum * 0.65 - Math.min(monoLeft, monoRight) * 0.9;
         }
       }
-
       initTables();
 
-      // 8通りのスネーク重みマップ (各16要素、インデックス r*4 + c)
-      // 角の配置: 0=左上(tl), 3=右上(tr), 12=左下(bl), 15=右下(br)
       const BASE_SNAKE_WEIGHTS = [
         15.0, 11.5, 8.8, 6.8,
         5.2,  4.0,  3.1, 2.4,
@@ -975,38 +1131,22 @@
 
       function buildSnakeOrders() {
         const patterns = {
-          tl: [
-            [0,1,2,3, 7,6,5,4, 8,9,10,11, 15,14,13,12], // 横スネーク
-            [0,4,8,12, 13,9,5,1, 2,6,10,14, 15,11,7,3]  // 縦スネーク
-          ],
-          tr: [
-            [3,2,1,0, 4,5,6,7, 11,10,9,8, 12,13,14,15],
-            [3,7,11,15, 14,10,6,2, 1,5,9,13, 12,8,4,0]
-          ],
-          bl: [
-            [12,13,14,15, 11,10,9,8, 4,5,6,7, 3,2,1,0],
-            [12,8,4,0, 1,5,9,13, 14,10,6,2, 3,7,11,15]
-          ],
-          br: [
-            [15,14,13,12, 8,9,10,11, 7,6,5,4, 0,1,2,3],
-            [15,11,7,3, 2,6,10,14, 13,9,5,1, 0,4,8,12]
-          ]
+          tl: [[0,1,2,3, 7,6,5,4, 8,9,10,11, 15,14,13,12], [0,4,8,12, 13,9,5,1, 2,6,10,14, 15,11,7,3]],
+          tr: [[3,2,1,0, 4,5,6,7, 11,10,9,8, 12,13,14,15], [3,7,11,15, 14,10,6,2, 1,5,9,13, 12,8,4,0]],
+          bl: [[12,13,14,15, 11,10,9,8, 4,5,6,7, 3,2,1,0], [12,8,4,0, 1,5,9,13, 14,10,6,2, 3,7,11,15]],
+          br: [[15,14,13,12, 8,9,10,11, 7,6,5,4, 0,1,2,3], [15,11,7,3, 2,6,10,14, 13,9,5,1, 0,4,8,12]]
         };
-
         const maps = {};
         for (const key of Object.keys(patterns)) {
           maps[key] = patterns[key].map(order => {
             const w = new Float64Array(16);
-            for (let rank = 0; rank < 16; rank++) {
-              w[order[rank]] = BASE_SNAKE_WEIGHTS[rank];
-            }
+            for (let rank = 0; rank < 16; rank++) w[order[rank]] = BASE_SNAKE_WEIGHTS[rank];
             return w;
           });
         }
         maps.auto = [...maps.tl, ...maps.tr, ...maps.bl, ...maps.br];
         return maps;
       }
-
       const SNAKE_MAPS = buildSnakeOrders();
 
       function transpose(b) {
@@ -1019,42 +1159,35 @@
         ];
       }
 
+      const DIRS = ['up', 'left', 'down', 'right'];
+
       function moveBoard(b, dir) {
         if (dir === 'left') {
-          const n0 = moveLeftTable[b[0]];
-          const n1 = moveLeftTable[b[1]];
-          const n2 = moveLeftTable[b[2]];
-          const n3 = moveLeftTable[b[3]];
-          if (n0 === b[0] && n1 === b[1] && n2 === b[2] && n3 === b[3]) return null;
-          return [n0, n1, n2, n3];
+          const n0 = moveLeftTable[b[0]], n1 = moveLeftTable[b[1]], n2 = moveLeftTable[b[2]], n3 = moveLeftTable[b[3]];
+          return (n0 === b[0] && n1 === b[1] && n2 === b[2] && n3 === b[3]) ? null : [n0, n1, n2, n3];
         }
         if (dir === 'right') {
-          const n0 = moveRightTable[b[0]];
-          const n1 = moveRightTable[b[1]];
-          const n2 = moveRightTable[b[2]];
-          const n3 = moveRightTable[b[3]];
-          if (n0 === b[0] && n1 === b[1] && n2 === b[2] && n3 === b[3]) return null;
-          return [n0, n1, n2, n3];
+          const n0 = moveRightTable[b[0]], n1 = moveRightTable[b[1]], n2 = moveRightTable[b[2]], n3 = moveRightTable[b[3]];
+          return (n0 === b[0] && n1 === b[1] && n2 === b[2] && n3 === b[3]) ? null : [n0, n1, n2, n3];
         }
         if (dir === 'up') {
           const t = transpose(b);
-          const n0 = moveLeftTable[t[0]];
-          const n1 = moveLeftTable[t[1]];
-          const n2 = moveLeftTable[t[2]];
-          const n3 = moveLeftTable[t[3]];
-          if (n0 === t[0] && n1 === t[1] && n2 === t[2] && n3 === t[3]) return null;
-          return transpose([n0, n1, n2, n3]);
+          const n0 = moveLeftTable[t[0]], n1 = moveLeftTable[t[1]], n2 = moveLeftTable[t[2]], n3 = moveLeftTable[t[3]];
+          return (n0 === t[0] && n1 === t[1] && n2 === t[2] && n3 === t[3]) ? null : transpose([n0, n1, n2, n3]);
         }
         if (dir === 'down') {
           const t = transpose(b);
-          const n0 = moveRightTable[t[0]];
-          const n1 = moveRightTable[t[1]];
-          const n2 = moveRightTable[t[2]];
-          const n3 = moveRightTable[t[3]];
-          if (n0 === t[0] && n1 === t[1] && n2 === t[2] && n3 === t[3]) return null;
-          return transpose([n0, n1, n2, n3]);
+          const n0 = moveRightTable[t[0]], n1 = moveRightTable[t[1]], n2 = moveRightTable[t[2]], n3 = moveRightTable[t[3]];
+          return (n0 === t[0] && n1 === t[1] && n2 === t[2] && n3 === t[3]) ? null : transpose([n0, n1, n2, n3]);
         }
         return null;
+      }
+
+      function hasAnyMove(b) {
+        for (let i = 0; i < 4; i++) {
+          if (moveBoard(b, DIRS[i]) !== null) return true;
+        }
+        return false;
       }
 
       function countEmpty(b) {
@@ -1069,17 +1202,25 @@
         return empty;
       }
 
+      function getCellFrom(b, r, c) {
+        return (b[r] >> (c * 4)) & 0xF;
+      }
+
+      function setCellOn(b, r, c, val) {
+        const nb = [b[0], b[1], b[2], b[3]];
+        const mask = ~(0xF << (c * 4));
+        nb[r] = (nb[r] & mask) | ((val & 0xF) << (c * 4));
+        return nb;
+      }
+
       function evaluateBoard(b, cornerMode) {
         const tb = transpose(b);
-        let baseScore =
+        const baseScore =
           rowHeurTable[b[0]] + rowHeurTable[b[1]] + rowHeurTable[b[2]] + rowHeurTable[b[3]] +
           rowHeurTable[tb[0]] + rowHeurTable[tb[1]] + rowHeurTable[tb[2]] + rowHeurTable[tb[3]];
 
-        // 盤面を展開してスネーク重み＆空きマススケール補正
         const vals = new Float64Array(16);
-        let maxTile = 0;
-        let emptyCount = 0;
-        let goalBonus = 0;
+        let maxTile = 0, emptyCount = 0, goalBonus = 0;
 
         for (let r = 0; r < 4; r++) {
           const row = b[r];
@@ -1100,47 +1241,58 @@
         for (let p = 0; p < weightsList.length; p++) {
           const w = weightsList[p];
           let s = 0;
-          for (let i = 0; i < 16; i++) {
-            s += vals[i] * w[i];
-          }
+          for (let i = 0; i < 16; i++) s += vals[i] * w[i];
           if (s > bestSnake) bestSnake = s;
         }
 
-        // 空きマスの価値を盤面規模に応じて微調整
         const emptyBonus = emptyCount * (120 + TILE_VAL[maxTile] * 0.25);
-
         return baseScore + bestSnake * 1.45 + emptyBonus + goalBonus;
       }
 
-      // Expectimax 探索 (キャッシュ付き)
-      const DIRS = ['up', 'left', 'down', 'right'];
+      // 次のターン（1つ新タイル出現）で即詰みになる確率を計算 (0.0 .. 1.0)
+      function calcNextTurnDeadProb(nb) {
+        const emptyCells = [];
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            if (((nb[r] >> (c * 4)) & 0xF) === 0) emptyCells.push([r, c]);
+          }
+        }
+        const n = emptyCells.length;
+        if (n === 0) return 1.0;
 
-      function searchBestMoves(b, cornerMode) {
+        let deadProb = 0;
+        for (let i = 0; i < n; i++) {
+          const [r, c] = emptyCells[i];
+          const shift = c * 4;
+          const b1 = [nb[0], nb[1], nb[2], nb[3]];
+          b1[r] |= (1 << shift);
+          if (!hasAnyMove(b1)) deadProb += 0.9 / n;
+
+          const b2 = [nb[0], nb[1], nb[2], nb[3]];
+          b2[r] |= (2 << shift);
+          if (!hasAnyMove(b2)) deadProb += 0.1 / n;
+        }
+        return deadProb;
+      }
+
+      // Expectimax 探索
+      function searchBestMoves(b, cornerMode, forcedDepth = null, timeBudgetMs = 95) {
         const empty = countEmpty(b);
-        // 空きマス数に応じて深さを自動調整 (ブラウザが重くならないバランス)
-        let maxDepth = 2;
-        if (empty <= 4) maxDepth = 4;
-        else if (empty <= 8) maxDepth = 3;
-
+        let maxDepth = forcedDepth ?? (empty <= 4 ? 4 : empty <= 8 ? 3 : 2);
         const cache = new Map();
         const startTime = performance.now();
         let aborted = false;
 
-        function boardKey(brd, depth, isPlayer) {
-          return `${brd[0]},${brd[1]},${brd[2]},${brd[3]}|${depth}|${isPlayer ? 1 : 0}`;
-        }
-
         function expectimax(brd, depth, isPlayer, probAccum) {
-          if (performance.now() - startTime > 110) {
+          if (performance.now() - startTime > timeBudgetMs) {
             aborted = true;
             return evaluateBoard(brd, cornerMode);
           }
-
           if (depth === 0 || probAccum < 0.004) {
             return evaluateBoard(brd, cornerMode);
           }
 
-          const key = boardKey(brd, depth, isPlayer);
+          const key = `${brd[0]},${brd[1]},${brd[2]},${brd[3]}|${depth}|${isPlayer ? 1 : 0}`;
           if (cache.has(key)) return cache.get(key);
 
           let result;
@@ -1157,14 +1309,11 @@
             }
             result = movedAny ? best : -1e9;
           } else {
-            // CHANCE ノード (空きマスに 1 が 90%, 2 が 10% で出現)
             const emptyCells = [];
             for (let r = 0; r < 4; r++) {
               const row = brd[r];
               for (let c = 0; c < 4; c++) {
-                if (((row >> (c * 4)) & 0xF) === 0) {
-                  emptyCells.push([r, c]);
-                }
+                if (((row >> (c * 4)) & 0xF) === 0) emptyCells.push([r, c]);
               }
             }
             if (emptyCells.length === 0) {
@@ -1172,7 +1321,6 @@
             } else {
               let sum = 0;
               const n = emptyCells.length;
-              // 深い層では最も確率の高い '1' のみ評価して枝刈り高速化
               const includeTwo = depth >= maxDepth - 1 || n <= 5;
               const p1 = (includeTwo ? 0.9 : 1.0) / n;
               const p2 = 0.1 / n;
@@ -1180,7 +1328,6 @@
               for (let i = 0; i < n; i++) {
                 const [r, c] = emptyCells[i];
                 const shift = c * 4;
-
                 const b1 = [brd[0], brd[1], brd[2], brd[3]];
                 b1[r] |= (1 << shift);
                 sum += p1 * expectimax(b1, depth - 1, true, probAccum * p1);
@@ -1202,26 +1349,185 @@
         const results = {};
         for (const dir of DIRS) {
           const nb = moveBoard(b, dir);
-          if (nb === null) {
-            results[dir] = null;
-          } else {
-            results[dir] = expectimax(nb, maxDepth, false, 1.0);
-          }
+          results[dir] = nb === null ? null : expectimax(nb, maxDepth, false, 1.0);
         }
         return { results, depth: maxDepth };
       }
 
       // =========================================================
-      // 2. アプリ状態管理 & UI 操作
+      // 2. 課金アイテム分析エンジン
       // =========================================================
-      let board = [0, 0, 0, 0]; // 4x4 bitboard
-      let selectedTileValue = 1; // 1..12 or 0 (erase)
+      function bestHeuristicAfterSlide(b, cornerMode) {
+        let bestScore = -Infinity;
+        let bestDir = null;
+        for (const dir of DIRS) {
+          const nb = moveBoard(b, dir);
+          if (nb !== null) {
+            const sc = evaluateBoard(nb, cornerMode);
+            if (sc > bestScore) {
+              bestScore = sc;
+              bestDir = dir;
+            }
+          }
+        }
+        return { bestScore, bestDir };
+      }
+
+      function generateItemCandidates(b, type) {
+        const candidates = [];
+        const filled = [];
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            const v = getCellFrom(b, r, c);
+            if (v > 0) filled.push({ r, c, v });
+          }
+        }
+
+        if (type === 'erase') {
+          for (const cell of filled) {
+            candidates.push({
+              type: 'erase',
+              board: setCellOn(b, cell.r, cell.c, 0),
+              targets: [{ r: cell.r, c: cell.c, tag: '消去' }],
+              desc: `${cell.r + 1}行${cell.c + 1}列の「${cell.v}」を消す`
+            });
+          }
+        } else if (type === 'upgrade') {
+          for (const cell of filled) {
+            if (cell.v <= 7) {
+              candidates.push({
+                type: 'upgrade',
+                board: setCellOn(b, cell.r, cell.c, cell.v + 1),
+                targets: [{ r: cell.r, c: cell.c, tag: '+1' }],
+                desc: `${cell.r + 1}行${cell.c + 1}列の「${cell.v}」を「${cell.v + 1}」にする`
+              });
+            }
+          }
+        } else if (type === 'swap') {
+          for (let i = 0; i < filled.length; i++) {
+            for (let j = i + 1; j < filled.length; j++) {
+              const a = filled[i], d = filled[j];
+              if (a.v === d.v) continue;
+              let nb = setCellOn(b, a.r, a.c, d.v);
+              nb = setCellOn(nb, d.r, d.c, a.v);
+              candidates.push({
+                type: 'swap',
+                board: nb,
+                targets: [
+                  { r: a.r, c: a.c, tag: '⇄' },
+                  { r: d.r, c: d.c, tag: '⇄' }
+                ],
+                desc: `${a.r + 1}行${a.c + 1}列(${a.v}) ⇄ ${d.r + 1}行${d.c + 1}列(${d.v}) を入替`
+              });
+            }
+          }
+        }
+        return candidates;
+      }
+
+      function analyzeAllItems(b, itemsState, cornerMode) {
+        const types = ['erase', 'swap', 'upgrade'];
+        const bestByType = {};
+
+        for (const type of types) {
+          if (!itemsState[type]) {
+            bestByType[type] = { available: false };
+            continue;
+          }
+
+          const rawCands = generateItemCandidates(b, type);
+          const validScored = [];
+
+          // 第1段階: 高速ヒューリスティック篩い分け
+          for (const cand of rawCands) {
+            const { bestScore, bestDir } = bestHeuristicAfterSlide(cand.board, cornerMode);
+            if (bestDir !== null) {
+              const afterSlide = moveBoard(cand.board, bestDir);
+              const deadProb = calcNextTurnDeadProb(afterSlide);
+              validScored.push({
+                ...cand,
+                roughScore: bestScore,
+                deadProb
+              });
+            }
+          }
+
+          if (validScored.length === 0) {
+            bestByType[type] = { available: true, noneValid: true };
+            continue;
+          }
+
+          // 即詰みしない候補を優先しつつ上位3件を抽出
+          validScored.sort((x, y) => {
+            if (Math.abs(x.deadProb - y.deadProb) > 0.05) return x.deadProb - y.deadProb;
+            return y.roughScore - x.roughScore;
+          });
+          const topCands = validScored.slice(0, 3);
+
+          // 第2段階: 深さ2の精密 Expectimax で最も優れたものを決定
+          let winner = null;
+          for (const cand of topCands) {
+            const { results } = searchBestMoves(cand.board, cornerMode, 2, 18);
+            let bDir = null, bScore = -Infinity;
+            for (const d of DIRS) {
+              if (results[d] !== null && results[d] > bScore) {
+                bScore = results[d];
+                bDir = d;
+              }
+            }
+            if (bDir) {
+              const afterSlide = moveBoard(cand.board, bDir);
+              const deadProb = calcNextTurnDeadProb(afterSlide);
+              const evalObj = {
+                ...cand,
+                afterMoveDir: bDir,
+                expectScore: bScore,
+                deadProb
+              };
+              if (!winner) {
+                winner = evalObj;
+              } else {
+                // 生存率優先、次にスコア
+                if (evalObj.deadProb + 0.02 < winner.deadProb ||
+                   (Math.abs(evalObj.deadProb - winner.deadProb) <= 0.02 && evalObj.expectScore > winner.expectScore)) {
+                  winner = evalObj;
+                }
+              }
+            }
+          }
+
+          bestByType[type] = winner
+            ? { available: true, best: winner }
+            : { available: true, noneValid: true };
+        }
+
+        // 全体ランキング作成
+        const ranked = [];
+        for (const type of types) {
+          const info = bestByType[type];
+          if (info.available && info.best) ranked.push(info.best);
+        }
+        ranked.sort((a, b) => {
+          if (Math.abs(a.deadProb - b.deadProb) > 0.03) return a.deadProb - b.deadProb;
+          return b.expectScore - a.expectScore;
+        });
+
+        return { bestByType, ranked };
+      }
+
+      // =========================================================
+      // 3. アプリ状態 & UI ロジック
+      // =========================================================
+      let board = [0, 0, 0, 0];
+      let selectedTileValue = 1;
       let cornerMode = 'auto';
       let movesCount = 0;
       let awaitingSpawn = false;
+      let items = { erase: true, swap: true, upgrade: true };
       let history = [];
-      let animMap = new Map(); // "r,c" -> 'spawn' | 'merge'
+      let animMap = new Map();
       let editingCell = null;
+      let highlightedTargets = []; // [{r, c, tag}]
 
       const boardEl = document.getElementById('board');
       const paletteGridEl = document.getElementById('palette-grid');
@@ -1238,6 +1544,10 @@
       const bestTextSub = document.getElementById('best-text-sub');
       const calcBadge = document.getElementById('calc-badge');
 
+      const itemPanelEl = document.getElementById('item-panel');
+      const itemVerdictEl = document.getElementById('item-verdict');
+      const itemRecsEl = document.getElementById('item-recs');
+
       const popover = document.getElementById('cell-popover');
       const popoverBackdrop = document.getElementById('popover-backdrop');
       const popoverGrid = document.getElementById('popover-grid');
@@ -1250,20 +1560,21 @@
         right: { arrow: '→', label: '右 (RIGHT)' }
       };
 
-      function getCell(r, c) {
-        return (board[r] >> (c * 4)) & 0xF;
-      }
+      const ITEM_NAMES = {
+        erase: '🗑 1マス消去',
+        swap: '⇄ 2マス入替',
+        upgrade: '⬆ 7以下を+1'
+      };
 
-      function setCell(r, c, val) {
-        const mask = ~(0xF << (c * 4));
-        board[r] = (board[r] & mask) | ((val & 0xF) << (c * 4));
-      }
+      function getCell(r, c) { return getCellFrom(board, r, c); }
+      function setCell(r, c, val) { board = setCellOn(board, r, c, val); }
 
       function pushHistory() {
         history.push({
           board: [...board],
           movesCount,
-          awaitingSpawn
+          awaitingSpawn,
+          items: { ...items }
         });
         if (history.length > 100) history.shift();
         btnUndo.disabled = false;
@@ -1286,7 +1597,6 @@
         eraseBtn.addEventListener('click', () => selectPalette(0));
         paletteGridEl.appendChild(eraseBtn);
 
-        // Popover grid (1..12 + delete)
         popoverGrid.innerHTML = '';
         for (let v = 1; v <= 12; v++) {
           const btn = document.createElement('button');
@@ -1333,8 +1643,7 @@
         popoverBackdrop.classList.add('open');
         popover.classList.add('open');
 
-        const popW = 224;
-        const popH = 215;
+        const popW = 224, popH = 215;
         let left = rect.left + rect.width / 2 - popW / 2;
         let top = rect.bottom + 8;
         if (left + popW > window.innerWidth - 10) left = window.innerWidth - popW - 10;
@@ -1350,7 +1659,6 @@
         popoverBackdrop.classList.remove('open');
         popover.classList.remove('open');
       }
-
       popoverBackdrop.addEventListener('click', closePopover);
 
       function handleCellClick(r, c, cellEl) {
@@ -1373,7 +1681,6 @@
           animMap.set(`${r},${c}`, 'spawn');
           renderAll();
         } else {
-          // 既に数字がある場合はクイック編集メニューを開く
           openPopover(r, c, cellEl.getBoundingClientRect());
         }
       }
@@ -1383,21 +1690,29 @@
         if (nextBoard === null) return;
 
         pushHistory();
-        // 合体アニメ位置を簡易判定
         animMap.clear();
         for (let r = 0; r < 4; r++) {
           for (let c = 0; c < 4; c++) {
-            const nv = (nextBoard[r] >> (c * 4)) & 0xF;
+            const nv = getCellFrom(nextBoard, r, c);
             const ov = getCell(r, c);
-            if (nv > 0 && nv !== ov) {
-              animMap.set(`${r},${c}`, 'merge');
-            }
+            if (nv > 0 && nv !== ov) animMap.set(`${r},${c}`, 'merge');
           }
         }
-
         board = nextBoard;
         movesCount++;
         awaitingSpawn = true;
+        renderAll();
+      }
+
+      function applyItemSuggestion(rec) {
+        pushHistory();
+        animMap.clear();
+        for (const t of rec.targets) {
+          animMap.set(`${t.r},${t.c}`, 'merge');
+        }
+        board = rec.board;
+        items[rec.type] = false;
+        awaitingSpawn = false; // アイテム使用直後は自分のスライドターン
         renderAll();
       }
 
@@ -1407,29 +1722,52 @@
         board = prev.board;
         movesCount = prev.movesCount;
         awaitingSpawn = prev.awaitingSpawn;
+        items = { ...prev.items };
         animMap.clear();
         btnUndo.disabled = history.length === 0;
         renderAll();
       }
 
       function resetGame() {
-        if (movesCount > 0 || countEmpty(board) < 16) {
+        if (movesCount > 0 || countEmpty(board) < 16 || !items.erase || !items.swap || !items.upgrade) {
           pushHistory();
         }
         board = [0, 0, 0, 0];
         movesCount = 0;
         awaitingSpawn = false;
+        items = { erase: true, swap: true, upgrade: true };
         animMap.clear();
+        highlightedTargets = [];
         renderAll();
+      }
+
+      function applyTargetHighlights(targets) {
+        highlightedTargets = targets || [];
+        const cells = boardEl.children;
+        for (let i = 0; i < cells.length; i++) {
+          const el = cells[i];
+          el.classList.remove('item-target');
+          const oldBadge = el.querySelector('.item-target-badge');
+          if (oldBadge) oldBadge.remove();
+        }
+        for (const t of highlightedTargets) {
+          const idx = t.r * 4 + t.c;
+          const el = cells[idx];
+          if (el) {
+            el.classList.add('item-target');
+            const badge = document.createElement('span');
+            badge.className = 'item-target-badge';
+            badge.textContent = t.tag;
+            el.appendChild(badge);
+          }
+        }
       }
 
       function renderBoard() {
         boardEl.innerHTML = '';
         boardEl.classList.toggle('awaiting', awaitingSpawn);
 
-        let maxTile = 0;
-        let filledCount = 0;
-
+        let maxTile = 0, filledCount = 0;
         for (let r = 0; r < 4; r++) {
           for (let c = 0; c < 4; c++) {
             const val = getCell(r, c);
@@ -1437,14 +1775,12 @@
               filledCount++;
               if (val > maxTile) maxTile = val;
             }
-
             const cell = document.createElement('div');
             cell.className = 'cell ' + (val === 0 ? 'empty' : 'filled');
             if (val > 0) {
               cell.classList.add(val <= 12 ? `tile-${val}` : 'tile-high');
               cell.textContent = val;
             }
-
             const anim = animMap.get(`${r},${c}`);
             if (anim === 'spawn') cell.classList.add('anim-spawn');
             else if (anim === 'merge') cell.classList.add('anim-merge');
@@ -1456,26 +1792,117 @@
 
         statMaxEl.textContent = maxTile;
         statMovesEl.textContent = movesCount;
-
-        // Status banner update
-        statusBannerEl.classList.remove('awaiting-spawn', 'goal-reached');
-        if (maxTile >= 12) {
-          statusBannerEl.classList.add('goal-reached');
-          statusTextEl.textContent = `🎉 祝・12 達成！そのまま続行してさらなる高みも目指せます`;
-        } else if (filledCount === 0) {
-          statusTextEl.textContent = '空きマスをクリックして、最初の数字を入力してください';
-        } else if (awaitingSpawn) {
-          statusBannerEl.classList.add('awaiting-spawn');
-          statusTextEl.textContent = '新しく出現したマスをクリックして数字を入力してください';
-        } else {
-          statusTextEl.textContent = 'ナビゲートされた十字キーを押してスライド＆合体！';
-        }
-
         return { maxTile, filledCount };
       }
 
-      function updateNavigation(filledCount) {
-        // 移動可能方向チェック
+      function renderInventoryChips() {
+        for (const type of ['erase', 'swap', 'upgrade']) {
+          const chip = document.getElementById(`inv-${type}`);
+          const avail = items[type];
+          chip.classList.toggle('used', !avail);
+          chip.querySelector('.inv-status').textContent = avail ? '残り 1回' : '使用済';
+        }
+      }
+
+      function renderItemAdvisor(filledCount, anyMovable, bestDir, bestDeadProb) {
+        itemPanelEl.classList.remove('urgent', 'critical');
+        itemRecsEl.innerHTML = '';
+
+        if (filledCount <= 1) {
+          itemVerdictEl.className = 'item-verdict';
+          itemVerdictEl.innerHTML = '<span>💡</span><span>盤面を入力するとアイテムの使い所を自動判定します</span>';
+          applyTargetHighlights([]);
+          return;
+        }
+
+        const hasAnyItem = items.erase || items.swap || items.upgrade;
+        if (!hasAnyItem) {
+          itemVerdictEl.className = 'item-verdict';
+          itemVerdictEl.innerHTML = '<span>📭</span><span>使用可能なアイテムがありません（すべて使用済）</span>';
+          applyTargetHighlights([]);
+          return;
+        }
+
+        const { bestByType, ranked } = analyzeAllItems(board, items, cornerMode);
+        const emptyCount = 16 - filledCount;
+        const bestAfterSlideEmpty = bestDir ? countEmpty(moveBoard(board, bestDir)) : 0;
+
+        // 危機レベルの判定
+        let urgency = 'save'; // 'critical' | 'warn' | 'save'
+        let verdictHTML = '';
+
+        if (!anyMovable) {
+          urgency = 'critical';
+          verdictHTML = `<span>🚨</span><span><strong>手詰まり（ゲームオーバー）！</strong><br>今すぐアイテムを使って盤面を動かしましょう。</span>`;
+        } else if (bestDeadProb > 0) {
+          urgency = bestDeadProb >= 0.4 ? 'critical' : 'warn';
+          const pct = Math.round(bestDeadProb * 100);
+          verdictHTML = `<span>⚠️</span><span><strong>次ターン詰みリスク (${pct}%)！</strong><br>通常移動のあと新タイル出現で詰む恐れがあります。</span>`;
+        } else if (emptyCount <= 2 && bestAfterSlideEmpty <= 1) {
+          urgency = 'warn';
+          verdictHTML = `<span>⚡</span><span><strong>盤面がかなり窮屈です（空き残り少）</strong><br>形を整えるためにアイテム使用を検討できます。</span>`;
+        } else {
+          urgency = 'save';
+          verdictHTML = `<span>🛡️</span><span><strong>今は温存がおすすめ</strong>（通常操作で進行可能）<br><span style="color:var(--text-muted);font-size:0.73rem;">参考として、今使う場合のベスト候補を表示しています</span></span>`;
+        }
+
+        if (urgency === 'critical') itemPanelEl.classList.add('critical');
+        else if (urgency === 'warn') itemPanelEl.classList.add('urgent');
+
+        itemVerdictEl.className = `item-verdict verdict-${urgency === 'critical' ? 'critical' : urgency === 'warn' ? 'warn' : 'save'}`;
+        itemVerdictEl.innerHTML = verdictHTML;
+
+        if (ranked.length === 0) {
+          itemRecsEl.innerHTML = '<div style="font-size:0.78rem; color:var(--text-muted);">有効なアイテムの使い方が見つかりませんでした</div>';
+          applyTargetHighlights([]);
+          return;
+        }
+
+        // ピンチの時は1位のターゲットを自動で盤面ハイライト
+        if (urgency !== 'save' && !awaitingSpawn) {
+          applyTargetHighlights(ranked[0].targets);
+        } else {
+          applyTargetHighlights([]);
+        }
+
+        ranked.forEach((rec, idx) => {
+          const card = document.createElement('div');
+          card.className = 'item-rec-card' + (idx === 0 ? ' top-pick' : '');
+
+          const survivalText = rec.deadProb === 0
+            ? '<span style="color:#34d399;">詰み回避 OK</span>'
+            : `<span style="color:#fbbf24;">次手詰み率 ${Math.round(rec.deadProb * 100)}%</span>`;
+
+          const rankLabel = idx === 0 ? '<span class="rec-rank-badge">最有力</span>' : `<span style="color:var(--text-muted);font-size:0.72rem;">#${idx + 1}</span>`;
+
+          card.innerHTML = `
+            <div class="rec-head">
+              <div class="rec-title">${rankLabel} ${ITEM_NAMES[rec.type]}</div>
+              <div style="font-size:0.72rem;">${survivalText}</div>
+            </div>
+            <div class="rec-detail">${rec.desc}</div>
+            <div class="rec-foot">
+              <span>使用後のおすすめ: <strong style="color:#38bdf8;">${DIR_META[rec.afterMoveDir].arrow} ${DIR_META[rec.afterMoveDir].label}</strong></span>
+              <button class="btn-apply-item">✨ 適用して消費</button>
+            </div>
+          `;
+
+          card.addEventListener('mouseenter', () => applyTargetHighlights(rec.targets));
+          card.addEventListener('mouseleave', () => {
+            if (urgency !== 'save' && !awaitingSpawn) applyTargetHighlights(ranked[0].targets);
+            else applyTargetHighlights([]);
+          });
+
+          card.querySelector('.btn-apply-item').addEventListener('click', (e) => {
+            e.stopPropagation();
+            applyItemSuggestion(rec);
+          });
+
+          itemRecsEl.appendChild(card);
+        });
+      }
+
+      function updateNavigation(maxTile, filledCount) {
         const canMove = {};
         let anyMovable = false;
         for (const d of DIRS) {
@@ -1490,8 +1917,25 @@
 
         const dirRows = document.querySelectorAll('.dir-row');
 
+        // ステータスバナー
+        statusBannerEl.classList.remove('awaiting-spawn', 'goal-reached', 'danger-alert');
+        if (maxTile >= 12) {
+          statusBannerEl.classList.add('goal-reached');
+          statusTextEl.textContent = '🎉 祝・12 達成！そのまま続けてさらなる記録も狙えます';
+        } else if (filledCount === 0) {
+          statusTextEl.textContent = '空きマスをクリックして、最初の数字を入力してください';
+        } else if (!anyMovable) {
+          statusBannerEl.classList.add('danger-alert');
+          statusTextEl.textContent = '🚨 移動可能な方向がありません！右下のアイテムアドバイスを確認してください';
+        } else if (awaitingSpawn) {
+          statusBannerEl.classList.add('awaiting-spawn');
+          statusTextEl.textContent = '新しく出現したマス（1つ）をクリックして数字を入力してください';
+        } else {
+          statusTextEl.textContent = '緑色に光る十字キーを押してスライド＆合体！';
+        }
+
         if (filledCount === 0) {
-          bestMoveBox.classList.remove('has-best');
+          bestMoveBox.className = 'best-move-box';
           bestArrowIcon.textContent = '−';
           bestTextMain.textContent = '盤面を入力してください';
           bestTextSub.textContent = '空きマスをクリックすると数字を配置できます';
@@ -1501,31 +1945,30 @@
             row.querySelector('.bar-fill').style.width = '0%';
             row.querySelector('.dir-pct').textContent = '-';
           });
+          renderItemAdvisor(0, false, null, 0);
           return;
         }
 
         if (!anyMovable) {
-          bestMoveBox.classList.remove('has-best');
+          bestMoveBox.className = 'best-move-box is-danger';
           bestArrowIcon.textContent = '×';
-          bestTextMain.textContent = '移動可能な方向がありません';
-          bestTextSub.textContent = '「1手戻す」か盤面を編集してください';
-          calcBadge.textContent = 'Game Over';
+          bestTextMain.textContent = '手詰まり（移動不可）';
+          bestTextSub.textContent = '課金アイテムで打開できるか下のパネルで提案中';
+          calcBadge.textContent = 'Blocked';
           dirRows.forEach(row => {
             row.className = 'dir-row';
             row.querySelector('.bar-fill').style.width = '0%';
             row.querySelector('.dir-pct').textContent = '不可';
           });
+          renderItemAdvisor(filledCount, false, null, 1.0);
           return;
         }
 
-        // Expectimax 計算
+        // 通常手の Expectimax
         const { results, depth } = searchBestMoves(board, cornerMode);
         calcBadge.textContent = `Depth ${depth}`;
 
-        let bestDir = null;
-        let bestVal = -Infinity;
-        let minVal = Infinity;
-
+        let bestDir = null, bestVal = -Infinity, minVal = Infinity;
         for (const d of DIRS) {
           const v = results[d];
           if (v !== null) {
@@ -1534,16 +1977,22 @@
           }
         }
 
-        // UI反映
+        const bestDeadProb = bestDir ? calcNextTurnDeadProb(moveBoard(board, bestDir)) : 0;
+
         if (bestDir) {
-          bestMoveBox.classList.add('has-best');
+          bestMoveBox.className = 'best-move-box ' + (bestDeadProb > 0.2 ? 'is-danger' : 'has-best');
           bestArrowIcon.textContent = DIR_META[bestDir].arrow;
           bestTextMain.textContent = awaitingSpawn
             ? `仮の推奨: ${DIR_META[bestDir].label}`
             : `おすすめ: ${DIR_META[bestDir].label}`;
-          bestTextSub.textContent = awaitingSpawn
-            ? '先に出現タイルを入力すると正確に再計算されます'
-            : '角の維持・スネーク配列・空きマス数を総合評価';
+
+          if (awaitingSpawn) {
+            bestTextSub.textContent = '先に出現タイルを1つ入力すると正確に再計算します';
+          } else if (bestDeadProb > 0) {
+            bestTextSub.textContent = `⚠️ 注意: この手でも次の出現で ${Math.round(bestDeadProb * 100)}% 詰みます`;
+          } else {
+            bestTextSub.textContent = '角の維持・スネーク配列・空きマス数を総合評価';
+          }
 
           const bestBtn = document.getElementById(`dpad-${bestDir}`);
           bestBtn.classList.add('recommended');
@@ -1566,14 +2015,7 @@
             pctEl.textContent = '移動不可';
             return;
           }
-
-          let pct;
-          if (bestVal === minVal) {
-            pct = 100;
-          } else {
-            pct = Math.round(15 + 85 * ((v - minVal) / span));
-          }
-
+          const pct = (bestVal === minVal) ? 100 : Math.round(15 + 85 * ((v - minVal) / span));
           if (d === bestDir) {
             row.classList.add('is-best');
             pctEl.textContent = '最適 (100%)';
@@ -1583,18 +2025,19 @@
           }
           fill.style.width = `${pct}%`;
         });
+
+        renderItemAdvisor(filledCount, anyMovable, bestDir, bestDeadProb);
       }
 
       function renderAll() {
-        const { filledCount } = renderBoard();
-        updateNavigation(filledCount);
+        renderInventoryChips();
+        const { maxTile, filledCount } = renderBoard();
+        updateNavigation(maxTile, filledCount);
       }
 
       // Event Listeners
       document.querySelectorAll('.dpad-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          performMove(btn.dataset.dir);
-        });
+        btn.addEventListener('click', () => performMove(btn.dataset.dir));
       });
 
       document.querySelectorAll('.corner-btn').forEach(btn => {
@@ -1602,6 +2045,15 @@
           document.querySelectorAll('.corner-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           cornerMode = btn.dataset.corner;
+          renderAll();
+        });
+      });
+
+      document.querySelectorAll('.inv-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const type = chip.dataset.item;
+          pushHistory();
+          items[type] = !items[type];
           renderAll();
         });
       });
@@ -1629,7 +2081,6 @@
         }
       });
 
-      // 初期セットアップ
       initPalette();
       renderAll();
     })();
