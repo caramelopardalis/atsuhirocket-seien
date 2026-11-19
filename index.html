@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>2048 Navigator (1-12) + Item Advisor</title>
+  <title>2048 Navigator (1-13) + Item Advisor</title>
   <style>
     :root {
       --bg-base: #0b1120;
@@ -18,7 +18,6 @@
       --best-glow: rgba(16, 185, 129, 0.45);
       --warn: #f59e0b;
       --danger: #ef4444;
-      --item-purple: #a855f7;
     }
 
     * {
@@ -389,27 +388,28 @@
       100% { transform: scale(1); }
     }
 
-    /* Tile Colors 1 - 12+ */
+    /* Tile Colors 1 - 13+ */
     .tile-1  { background: linear-gradient(135deg, #334155, #1e293b); color: #e2e8f0; border-color: rgba(148,163,184,0.28); }
     .tile-2  { background: linear-gradient(135deg, #1e40af, #1e3a8a); color: #dbeafe; border-color: rgba(96,165,250,0.35); }
     .tile-3  { background: linear-gradient(135deg, #0284c7, #0369a1); color: #e0f2fe; border-color: rgba(56,189,248,0.45); }
     .tile-4  { background: linear-gradient(135deg, #0d9488, #0f766e); color: #ccfbf1; border-color: rgba(45,212,191,0.45); }
     .tile-5  { background: linear-gradient(135deg, #059669, #047857); color: #d1fae5; border-color: rgba(52,211,153,0.45); }
     .tile-6  { background: linear-gradient(135deg, #65a30d, #4d7c0f); color: #ecfccb; border-color: rgba(163,230,53,0.45); }
-    .tile-7  { background: linear-gradient(135deg, #d97706, #b45309); color: #fef3c7; border-color: rgba(251,191,36,0.5); box-shadow: 0 4px 14px rgba(217, 119, 0.25); }
+    .tile-7  { background: linear-gradient(135deg, #d97706, #b45309); color: #fef3c7; border-color: rgba(251,191,36,0.5); box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25); }
     .tile-8  { background: linear-gradient(135deg, #ea580c, #c2410c); color: #ffedd5; border-color: rgba(251,146,60,0.55); box-shadow: 0 4px 16px rgba(234, 88, 12, 0.3); }
     .tile-9  { background: linear-gradient(135deg, #e11d48, #be123c); color: #ffe4e6; border-color: rgba(251,113,133,0.55); box-shadow: 0 4px 18px rgba(225, 29, 72, 0.35); }
     .tile-10 { background: linear-gradient(135deg, #9333ea, #7e22ce); color: #f3e8ff; border-color: rgba(192,132,252,0.6); box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4); }
-    .tile-11 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #1e1b4b; border-color: rgba(253,224,71,0.85); box-shadow: 0 0 24px rgba(245, 158, 11, 0.55); }
-    .tile-12 {
+    .tile-11 { background: linear-gradient(135deg, #4f46e5, #3730a3); color: #e0e7ff; border-color: rgba(129,140,248,0.65); box-shadow: 0 4px 22px rgba(79, 70, 229, 0.45); }
+    .tile-12 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #1e1b4b; border-color: rgba(253,224,71,0.85); box-shadow: 0 0 24px rgba(245, 158, 11, 0.55); }
+    .tile-13 {
       background: linear-gradient(135deg, #fde047, #38bdf8, #f472b6);
       color: #090d16;
       border-color: #fff;
-      box-shadow: 0 0 28px rgba(253, 224, 71, 0.65), 0 0 12px rgba(56, 189, 248, 0.5);
+      box-shadow: 0 0 28px rgba(253, 224, 71, 0.65), 0 0 14px rgba(56, 189, 248, 0.55);
     }
     .tile-high { background: linear-gradient(135deg, #ffffff, #cbd5e1); color: #0f172a; }
 
-    /* Palette */
+    /* Palette (7 columns x 2 rows = 13 numbers + 1 erase button) */
     .palette-section {
       margin-top: 14px;
       max-width: 440px;
@@ -455,9 +455,10 @@
     }
 
     .pal-btn.pal-erase {
-      grid-column: span 2;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: #fca5a5;
+      white-space: nowrap;
+      padding: 0 2px;
     }
 
     .pal-btn.pal-erase.active {
@@ -660,9 +661,7 @@
 
     .kbd-hint { font-size: 0.72rem; color: var(--text-muted); text-align: center; }
 
-    /* =========================================================
-       Item Advisor Panel
-       ========================================================= */
+    /* Item Advisor Panel */
     .item-panel.urgent {
       border-color: rgba(245, 158, 11, 0.65);
       background: linear-gradient(160deg, rgba(245, 158, 11, 0.12), rgba(30, 41, 59, 0.85));
@@ -699,9 +698,7 @@
       transition: all 0.15s;
     }
 
-    .inv-chip:hover {
-      background: rgba(168, 85, 247, 0.25);
-    }
+    .inv-chip:hover { background: rgba(168, 85, 247, 0.25); }
 
     .inv-chip .inv-status {
       font-size: 0.64rem;
@@ -885,12 +882,11 @@
     .pop-btn:hover { background: #334155; }
 
     .pop-btn.pop-del {
-      grid-column: span 4;
+      grid-column: span 3;
       background: rgba(239, 68, 68, 0.15);
       border-color: rgba(239, 68, 68, 0.35);
       color: #fca5a5;
-      margin-top: 2px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
     }
   </style>
 </head>
@@ -898,9 +894,9 @@
   <div class="container">
     <header>
       <div class="brand">
-        <div class="brand-badge">12</div>
+        <div class="brand-badge">13</div>
         <div>
-          <h1>2048 Navigator <span style="font-weight:400; color:var(--text-muted); font-size:0.84rem;">(1–12 / 1手1タイル出現)</span></h1>
+          <h1>2048 Navigator <span style="font-weight:400; color:var(--text-muted); font-size:0.84rem;">(1–13 / 1手1タイル出現)</span></h1>
           <p>最適操作ナビ＋課金アイテム（消去 / 入替 / +1）危機回避アドバイザー</p>
         </div>
       </div>
@@ -1052,6 +1048,7 @@
       // =========================================================
       // 1. 高速ビットボード & ルックアップテーブル
       // =========================================================
+      const MAX_GOAL = 13;
       const moveLeftTable = new Uint16Array(65536);
       const moveRightTable = new Uint16Array(65536);
       const rowHeurTable = new Float64Array(65536);
@@ -1231,7 +1228,7 @@
             } else {
               vals[r * 4 + c] = TILE_VAL[t];
               if (t > maxTile) maxTile = t;
-              if (t >= 12) goalBonus += 50000;
+              if (t >= MAX_GOAL) goalBonus += 100000;
             }
           }
         }
@@ -1249,7 +1246,6 @@
         return baseScore + bestSnake * 1.45 + emptyBonus + goalBonus;
       }
 
-      // 次のターン（1つ新タイル出現）で即詰みになる確率を計算 (0.0 .. 1.0)
       function calcNextTurnDeadProb(nb) {
         const emptyCells = [];
         for (let r = 0; r < 4; r++) {
@@ -1275,7 +1271,6 @@
         return deadProb;
       }
 
-      // Expectimax 探索
       function searchBestMoves(b, cornerMode, forcedDepth = null, timeBudgetMs = 95) {
         const empty = countEmpty(b);
         let maxDepth = forcedDepth ?? (empty <= 4 ? 4 : empty <= 8 ? 3 : 2);
@@ -1438,17 +1433,12 @@
           const rawCands = generateItemCandidates(b, type);
           const validScored = [];
 
-          // 第1段階: 高速ヒューリスティック篩い分け
           for (const cand of rawCands) {
             const { bestScore, bestDir } = bestHeuristicAfterSlide(cand.board, cornerMode);
             if (bestDir !== null) {
               const afterSlide = moveBoard(cand.board, bestDir);
               const deadProb = calcNextTurnDeadProb(afterSlide);
-              validScored.push({
-                ...cand,
-                roughScore: bestScore,
-                deadProb
-              });
+              validScored.push({ ...cand, roughScore: bestScore, deadProb });
             }
           }
 
@@ -1457,14 +1447,12 @@
             continue;
           }
 
-          // 即詰みしない候補を優先しつつ上位3件を抽出
           validScored.sort((x, y) => {
             if (Math.abs(x.deadProb - y.deadProb) > 0.05) return x.deadProb - y.deadProb;
             return y.roughScore - x.roughScore;
           });
           const topCands = validScored.slice(0, 3);
 
-          // 第2段階: 深さ2の精密 Expectimax で最も優れたものを決定
           let winner = null;
           for (const cand of topCands) {
             const { results } = searchBestMoves(cand.board, cornerMode, 2, 18);
@@ -1478,30 +1466,18 @@
             if (bDir) {
               const afterSlide = moveBoard(cand.board, bDir);
               const deadProb = calcNextTurnDeadProb(afterSlide);
-              const evalObj = {
-                ...cand,
-                afterMoveDir: bDir,
-                expectScore: bScore,
-                deadProb
-              };
-              if (!winner) {
+              const evalObj = { ...cand, afterMoveDir: bDir, expectScore: bScore, deadProb };
+              if (!winner ||
+                  evalObj.deadProb + 0.02 < winner.deadProb ||
+                  (Math.abs(evalObj.deadProb - winner.deadProb) <= 0.02 && evalObj.expectScore > winner.expectScore)) {
                 winner = evalObj;
-              } else {
-                // 生存率優先、次にスコア
-                if (evalObj.deadProb + 0.02 < winner.deadProb ||
-                   (Math.abs(evalObj.deadProb - winner.deadProb) <= 0.02 && evalObj.expectScore > winner.expectScore)) {
-                  winner = evalObj;
-                }
               }
             }
           }
 
-          bestByType[type] = winner
-            ? { available: true, best: winner }
-            : { available: true, noneValid: true };
+          bestByType[type] = winner ? { available: true, best: winner } : { available: true, noneValid: true };
         }
 
-        // 全体ランキング作成
         const ranked = [];
         for (const type of types) {
           const info = bestByType[type];
@@ -1527,7 +1503,7 @@
       let history = [];
       let animMap = new Map();
       let editingCell = null;
-      let highlightedTargets = []; // [{r, c, tag}]
+      let highlightedTargets = [];
 
       const boardEl = document.getElementById('board');
       const paletteGridEl = document.getElementById('palette-grid');
@@ -1582,7 +1558,7 @@
 
       function initPalette() {
         paletteGridEl.innerHTML = '';
-        for (let v = 1; v <= 12; v++) {
+        for (let v = 1; v <= MAX_GOAL; v++) {
           const btn = document.createElement('button');
           btn.className = 'pal-btn' + (v === selectedTileValue ? ' active' : '');
           btn.textContent = v;
@@ -1598,7 +1574,7 @@
         paletteGridEl.appendChild(eraseBtn);
 
         popoverGrid.innerHTML = '';
-        for (let v = 1; v <= 12; v++) {
+        for (let v = 1; v <= MAX_GOAL; v++) {
           const btn = document.createElement('button');
           btn.className = 'pop-btn';
           btn.textContent = v;
@@ -1712,7 +1688,7 @@
         }
         board = rec.board;
         items[rec.type] = false;
-        awaitingSpawn = false; // アイテム使用直後は自分のスライドターン
+        awaitingSpawn = false;
         renderAll();
       }
 
@@ -1778,7 +1754,7 @@
             const cell = document.createElement('div');
             cell.className = 'cell ' + (val === 0 ? 'empty' : 'filled');
             if (val > 0) {
-              cell.classList.add(val <= 12 ? `tile-${val}` : 'tile-high');
+              cell.classList.add(val <= MAX_GOAL ? `tile-${val}` : 'tile-high');
               cell.textContent = val;
             }
             const anim = animMap.get(`${r},${c}`);
@@ -1823,12 +1799,11 @@
           return;
         }
 
-        const { bestByType, ranked } = analyzeAllItems(board, items, cornerMode);
+        const { ranked } = analyzeAllItems(board, items, cornerMode);
         const emptyCount = 16 - filledCount;
         const bestAfterSlideEmpty = bestDir ? countEmpty(moveBoard(board, bestDir)) : 0;
 
-        // 危機レベルの判定
-        let urgency = 'save'; // 'critical' | 'warn' | 'save'
+        let urgency = 'save';
         let verdictHTML = '';
 
         if (!anyMovable) {
@@ -1858,7 +1833,6 @@
           return;
         }
 
-        // ピンチの時は1位のターゲットを自動で盤面ハイライト
         if (urgency !== 'save' && !awaitingSpawn) {
           applyTargetHighlights(ranked[0].targets);
         } else {
@@ -1917,11 +1891,10 @@
 
         const dirRows = document.querySelectorAll('.dir-row');
 
-        // ステータスバナー
         statusBannerEl.classList.remove('awaiting-spawn', 'goal-reached', 'danger-alert');
-        if (maxTile >= 12) {
+        if (maxTile >= MAX_GOAL) {
           statusBannerEl.classList.add('goal-reached');
-          statusTextEl.textContent = '🎉 祝・12 達成！そのまま続けてさらなる記録も狙えます';
+          statusTextEl.textContent = '🎉 祝・13 達成！そのまま続けてさらなる記録も狙えます';
         } else if (filledCount === 0) {
           statusTextEl.textContent = '空きマスをクリックして、最初の数字を入力してください';
         } else if (!anyMovable) {
@@ -1964,7 +1937,6 @@
           return;
         }
 
-        // 通常手の Expectimax
         const { results, depth } = searchBestMoves(board, cornerMode);
         calcBadge.textContent = `Depth ${depth}`;
 
